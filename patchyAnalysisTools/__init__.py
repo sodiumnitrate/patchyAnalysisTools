@@ -1,2 +1,1 @@
-def my_cool_test_method():
-	print('It's working!')
+__version__ = '0.0.1'
