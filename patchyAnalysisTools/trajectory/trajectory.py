@@ -222,3 +222,59 @@ def read_trajectory(file_name):
     traj_obj = trajectory(traj,particles,frames)
 
     return traj_obj
+
+def get_frame_slice(frame_object, grid_spacing=0.02, rad=25, start=0, end=2):
+    cell = frame_object.cell
+
+    if start < 0 or start > cell[0] or end < 0 or end > cell[0]:
+        sys.exit("Error: slice start=%d and end=%d values are problematic"%(start,end))
+
+    if start > end:
+        dummy = start
+        start = end
+        end = dummy
+
+    nx = int(np.round(cell[0] / grid_spacing))
+    ny = int(np.round(cell[1] / grid_spacing))
+    nz = int(np.round(cell[2] / grid_spacing))
+    
+    grid_spacing_x = cell[0] / nx
+    grid_spacing_y = cell[1] / ny
+    grid_spacing_z = cell[2] / nz
+
+    start /= grid_spacing_z
+    end /= grid_spacing_z
+    start = int(start)
+    end = int(end)
+
+    if start == end:
+        end += 1
+
+    if end > nz:
+        end = nz
+    
+    grid = np.zeros((nx,ny,nz))
+
+    valid_triples = []
+    for ix in range(-rad,rad):
+        for iy in range(-rad,rad):
+            for iz in range(-rad,rad):
+                if ix**2 + iy**2 + iz**2 <= rad**2:
+                    valid_triples.append((ix,iy,iz))
+
+    for particle in frame_object.coordinates:
+        x,y,z = particle[0], particle[1], particle[2]
+        sx,sy,sz = int(np.round(x/grid_spacing_x)), int(np.round(y/grid_spacing_y)), int(np.round(z/grid_spacing_z))
+
+        for triple in valid_triples:
+            ixx = (sx + triple[0]) % nx
+            iyy = (sy + triple[1]) % ny
+            izz = (sz + triple[2]) % nz
+
+            grid[ixx,iyy,izz] = 1
+
+
+    slice = np.sum(grid[:,:,start:end],axis=2)
+    slice[slice > 1] = 1
+
+    return slice

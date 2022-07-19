@@ -23,6 +23,6 @@ setup(
     author_email='irem.altan@yale.edu',
     license='',
     packages=find_packages(),
-    install_requires=['numpy','pybind11'],
+    install_requires=['numpy','pybind11','matplotlib'],
     python_requires='>=3.6'
 )

@@ -4,3 +4,4 @@ eggs/
 .eggs/
 *.egg-info
 build/
+dist/
