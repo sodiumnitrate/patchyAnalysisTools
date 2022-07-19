@@ -6,7 +6,7 @@ def test_add(x,y):
     return x+y
 
 class frame():
-    def __init__(self,particles,frame,coordinates,cell,orientation=None,bonding=None,type=None):
+    def __init__(self,particles,frame,coordinates,cell,time_stamp,orientation=None,bonding=None,type=None):
         #TODO: change var names that are scalars to contain the word "number" or letter "n"
         self.particle = particles
         self.frame = frame
@@ -15,6 +15,7 @@ class frame():
         self.bonding = bonding
         self.type = type
         self.cell = cell
+        self.time_stamp = time_stamp
 
         # check that the provided data types make sense
         self.check_data()
@@ -193,6 +194,10 @@ def read_trajectory(file_name):
         newCellLine = lines[T*fr].split()
         cell = np.array([float(newCellLine[0]), float(newCellLine[1]), float(newCellLine[2]), 90., 90., 90.])
 
+        # get time_stamp
+        time_stamp_line = lines[T*fr+1].split()
+        time_stamp = int(time_stamp_line[2])
+
         data = []
 
         # loop through the lines that contain particle coordinate data
@@ -216,7 +221,7 @@ def read_trajectory(file_name):
         if type is not None:
             type = data[:,7]
 
-        frame_obj = frame(particles,fr,xyz,cell,orientation,bonding,type)
+        frame_obj = frame(particles,fr,xyz,cell,time_stamp,orientation,bonding,type)
         traj.append(frame_obj)
 
     traj_obj = trajectory(traj,particles,frames)
