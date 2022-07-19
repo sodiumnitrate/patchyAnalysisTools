@@ -1,0 +1,6 @@
+__pychache__/
+.Python
+eggs/
+.eggs/
+*.egg-info
+build/
