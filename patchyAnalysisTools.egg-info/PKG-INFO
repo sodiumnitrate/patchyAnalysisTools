@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: patchyAnalysisTools
+Version: 0.0.1
+Summary: simple tools to analyze output of patchy particle MC sims
+Home-page: https://github.com/sodiumnitrate/patchyAnalysisTools.git
+Author: Irem Altan
+Author-email: irem.altan@yale.edu
+License: UNKNOWN
+Platform: UNKNOWN
+Requires-Python: >=3.6
+
+UNKNOWN
+
