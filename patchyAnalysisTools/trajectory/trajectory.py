@@ -1,9 +1,7 @@
+from unittest.mock import patch
 import numpy as np
 import sys 
 import pdb
-
-def test_add(x,y):
-    return x+y
 
 class frame():
     def __init__(self,particles,frame,coordinates,cell,time_stamp,orientation=None,bonding=None,type=None):
@@ -19,6 +17,7 @@ class frame():
 
         # check that the provided data types make sense
         self.check_data()
+
 
     def check_data(self):
         if not isinstance(self.particle,int): 
@@ -73,6 +72,142 @@ class frame():
                 if m != self.particle:
                     print("WARNING: number of bonditypeng info do not match the number of particles")
 
+    def get_list_of_interacting_pairs(self,patch_obj):
+        #TODO: make this more efficient with neighbor lists
+        cell = self.cell
+
+        # get the square of the maximum lambda value to use as a threshold distance
+        max_lambda_sq = (np.max(patch_obj.lambda_vals))**2
+
+        bonds = []
+        # loop over pairs of particles (i,j) s.t. j>i
+        for i in range(self.particle):
+            for j in range(i+1,self.particle):
+                pos_i = self.coordinates[i,:]
+                pos_j = self.coordinates[j,:]
+
+                # rij vector
+                dist = pos_i - pos_j
+
+                # periodic boundary conditions
+                dist = nearest_image(dist,cell)
+
+                # squared distance between particles
+                d2 = dist[0]**2 + dist[1]**2 + dist[2]**2
+
+                # check if particles are interacting
+                interacting = False
+                # check if distance is less than the threshold value chosen above
+                if d2 <= max_lambda_sq:
+                    # types of particles
+                    type_i = self.type[i]
+                    type_j = self.type[j]
+
+                    # loop over all patch pairs
+                    # TODO: you can create this list above and avoid using the continue statements
+                    for pi in range(patch_obj.n_patch):
+                        if patch_obj.types[pi] != type_i:
+                            continue
+                        for pj in range(patch_obj.n_patch):
+                            if patch_obj.types[pj] != type_j:
+                                continue
+                            
+                            # get orientations of particles
+                            angles_i = self.orientation[i,:]
+                            angles_j = self.orientation[j,:]
+                            # get vector of the two patches
+                            pi_v = patch_obj.patch_vectors[pi]
+                            pj_v = patch_obj.patch_vectors[pj]
+                            # get cos_delta values for the two patches
+                            pi_cosdelta = patch_obj.cos_delta_vals[pi]
+                            pj_cosdelta = patch_obj.cos_delta_vals[pj]
+                            # check if the orientation is correct for interaction
+                            correct_orientation = check_reciprocal_interaction(angles_i,angles_j,pi_v,pj_v,pi_cosdelta,pj_cosdelta,dist)
+                            # if the orientation is correct
+                            if correct_orientation:
+                                # make sure the interacting patches have the same lambda value
+                                assert(patch_obj.lambda_vals[pi] == patch_obj.lambda_vals[pj])
+                                d = np.sqrt(d2)
+                                # final check of distance
+                                if d <= patch_obj.lambda_vals[pi]:
+                                    # the particles are interacting
+                                    interacting = True
+                if interacting:
+                    bonds.append((i,j))
+
+        return bonds
+
+def nearest_image(d,cell):
+    for i in range(3):
+        hbox = cell[i] / 2
+        if d[i] > hbox:
+            d[i] -= cell[i]
+        elif d[i] < -hbox:
+            d[i] += cell[i]
+
+    return d
+
+def check_calculated_bonds_against_bond_numbers(frame,bonds):
+    bond_numbers = np.zeros(frame.particle)
+    for bond in bonds:
+        bond_numbers[bond[0]] += 1
+        bond_numbers[bond[1]] += 1
+
+    correct = True
+    for i in range(frame.particle):
+        if bond_numbers[i] != frame.bonding[i]:
+            correct = False
+            print("Particle i has %d bonds from calc, but traj file says %d"%(bond_numbers[i],frame.bonding[i]))
+    return correct
+
+def get_bond_probability(frame,patch_object):
+    unique_types = list(set(patch_object.types))
+    n_patches_per_type = np.zeros(len(unique_types))
+    for utype,i in enumerate(unique_types):
+        for type in patch_object.types:
+            if utype == type:
+                n_patches_per_type[i] += 1
+
+    max_bonds = 0
+    curr_bonds = 0
+    for i in range(frame.particle):
+        type = frame.type[i]
+        bonds = frame.bonding[i]
+        max_bonds += n_patches_per_type[type]
+        curr_bonds += bonds
+
+    return curr_bonds/max_bonds
+
+def check_reciprocal_interaction(angles_i,angles_j,pi_v,pj_v,pi_cosdelta,pj_cosdelta,rji):
+    pi_v = rotate_vector(angles_i,pi_v)
+    pj_v = rotate_vector(angles_j,pj_v)
+
+    omega_i = pi_v.dot(-rji)/np.linalg.norm(rji)
+    omega_j = pj_v.dot(rji)/np.linalg.norm(rji)
+
+
+    if omega_i >= pi_cosdelta and omega_j >= pj_cosdelta:
+        return True
+    else:
+        return False
+
+def rotate_vector(angles,vector):
+    phi = angles[0]
+    theta = angles[1]
+    psi = angles[2]
+    R=np.zeros((3,3))
+    R[0][0] = np.cos(phi) * np.cos(psi) - np.cos(theta) * np.sin(phi) * np.sin(psi)
+    R[0][1] = -np.sin(phi) * np.cos(theta) * np.cos(psi) - np.cos(phi) * np.sin(psi)
+    R[0][2] = np.sin(phi) * np.sin(theta)
+    R[1][0] = np.cos(psi) * np.sin(phi) + np.cos(phi) * np.cos(theta) * np.sin(psi)
+    R[1][1] = np.cos(phi) * np.cos(theta) * np.cos(psi) - np.sin(phi) * np.sin(psi)
+    R[1][2] = -np.cos(phi) * np.sin(theta)
+    R[2][0] = np.sin(psi) * np.sin(theta)
+    R[2][1] = np.cos(psi) * np.sin(theta)
+    R[2][2] = np.cos(theta)  
+
+    return R.dot(vector)          
+
 class trajectory():
     def __init__(self,list_of_frames,particles=None,frames=None):
         self.list_of_frames = list_of_frames
@@ -112,6 +247,9 @@ class trajectory():
                 start = dummy
 
         return trajectory(self.list_of_frames[start:end])
+
+    def get_last_frame(self):
+        return self.list_of_frames[-1]
 
     def write_xyz(self,file_name):
         # up to 5 different types of particles are currently supported
@@ -216,10 +354,10 @@ def read_trajectory(file_name):
             orientation = data[:,3:6]
 
         if bonding is not None:
-            bonding = data[:,6]
+            bonding = data[:,7].astype(int)
 
         if type is not None:
-            type = data[:,7]
+            type = data[:,6].astype(int)
 
         frame_obj = frame(particles,fr,xyz,cell,time_stamp,orientation,bonding,type)
         traj.append(frame_obj)
@@ -283,3 +421,44 @@ def get_frame_slice(frame_object, grid_spacing=0.02, rad=25, start=0, end=2):
     slice[slice > 1] = 1
 
     return slice
+
+class patches():
+    # this assumes all patches interact with every other patch
+    def __init__(self,n_patch,eps_vals,lambda_vals,cos_delta_vals,patch_vectors,types):
+        self.n_patch = n_patch
+        self.eps_vals = eps_vals
+        self.lambda_vals = lambda_vals
+        self.cos_delta_vals = cos_delta_vals
+        self.patch_vectors = patch_vectors
+        self.types = types
+
+
+def read_patch_info(patch_file_name):
+    f = open(patch_file_name,'r')
+    line = f.readline()             # npatch diameter pm_switch (labels)
+    line = f.readline().split()     # npatch diameter pm_switch
+    n_patch = int(line[0])          
+    line = f.readline()             # ts  z[0]    z[1]    z[2] (labels)
+    line = f.readline()             #ts  z[0]    z[1]    z[2]
+
+    eps_vals = []
+    lambda_vals = []
+    cos_delta_vals = []
+    patch_vectors = []
+    types = []
+    for i in range(n_patch):
+        labels = f.readline()
+        line = f.readline().split()
+        eps_vals.append(float(line[0]))
+        lambda_vals.append(float(line[1]))
+        cos_delta_vals.append(float(line[2]))
+        
+        labels = f.readline()
+        line = f.readline().split()
+        vector = [float(line[i]) for i in range(3)]
+        patch_vectors.append(np.array(vector))
+        types.append(int(line[3]))
+        labels = f.readline()
+        labels = f.readline()
+
+    return patches(n_patch,eps_vals,lambda_vals,cos_delta_vals,patch_vectors,types)
