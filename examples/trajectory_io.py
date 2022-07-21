@@ -1,3 +1,4 @@
+from more_itertools import last
 from patchyAnalysisTools.trajectory import trajectory
 import matplotlib.pyplot as plt
 import pdb
@@ -36,3 +37,9 @@ if check:
 clusters = trajectory.find_all_clusters(bonds)
 print("There are %d clusters!"%len(clusters))
 trajectory.plot_clusters(last_frame,clusters)
+
+percolated_clusters = trajectory.find_percolating_clusters(last_frame, clusters)
+if trajectory.is_system_percolated(last_frame,clusters):
+    print("system is percolated!")
+else:
+    print("system is not percolated!")
