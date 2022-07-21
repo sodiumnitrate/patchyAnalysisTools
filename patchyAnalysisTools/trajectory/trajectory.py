@@ -1,7 +1,8 @@
-from unittest.mock import patch
 import numpy as np
 import sys 
 import pdb
+import matplotlib.pyplot as plt
+import random
 
 class frame():
     def __init__(self,particles,frame,coordinates,cell,time_stamp,orientation=None,bonding=None,type=None):
@@ -185,11 +186,58 @@ def check_reciprocal_interaction(angles_i,angles_j,pi_v,pj_v,pi_cosdelta,pj_cosd
     omega_i = pi_v.dot(-rji)/np.linalg.norm(rji)
     omega_j = pj_v.dot(rji)/np.linalg.norm(rji)
 
-
     if omega_i >= pi_cosdelta and omega_j >= pj_cosdelta:
         return True
     else:
         return False
+
+def select_cluster(node,bonds):
+    Q = [node]
+    selected = []
+    while len(Q) > 0:
+        curr = Q[0]
+        Q = Q[1:]
+        selected.append(curr)
+        for (i,j) in bonds:
+            if curr==i and j not in selected:
+                Q.append(j)
+            elif curr==j and i not in selected:
+                Q.append(i)
+    return selected
+
+def find_all_clusters(bonds):
+    list_of_particles_in_bonds = []
+    for (i,j) in bonds:
+        list_of_particles_in_bonds.append(i)
+        list_of_particles_in_bonds.append(j)
+
+    list_of_particles_in_bonds = list(set(list_of_particles_in_bonds))
+
+    clusters = []
+    while len(list_of_particles_in_bonds) > 0:
+        node = list_of_particles_in_bonds[0]
+        selected = select_cluster(node,bonds)
+        selected = list(set(selected))
+        clusters.append(selected)
+        for p in selected:
+            list_of_particles_in_bonds.remove(p)
+    return clusters
+
+def plot_clusters(frame,clusters):
+    n_clusters = len(clusters)
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    for cluster in clusters:
+        # generate random color for each cluster
+        color = "#"+''.join([random.choice('0123456789ABCDEF') for i in range(6)])
+        for i in cluster:
+            x = frame.coordinates[i,0]
+            y = frame.coordinates[i,1]
+            z = frame.coordinates[i,2]
+            ax.scatter(x,y,z,c=color)
+
+    plt.show()
+    
 
 def rotate_vector(angles,vector):
     phi = angles[0]

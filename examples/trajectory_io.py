@@ -32,3 +32,7 @@ bonds = last_frame.get_list_of_interacting_pairs(patches_object)
 check = trajectory.check_calculated_bonds_against_bond_numbers(last_frame,bonds)
 if check:
     print("bond counts match!")
+
+clusters = trajectory.find_all_clusters(bonds)
+print("There are %d clusters!"%len(clusters))
+trajectory.plot_clusters(last_frame,clusters)
