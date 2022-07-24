@@ -3,7 +3,7 @@ import sys
 import pdb
 import matplotlib.pyplot as plt
 import random
-
+import networkx as nx
 
 class frame():
     def __init__(self, particles, frame, coordinates, cell, time_stamp, orientation=None, bonding=None, type=None):
@@ -405,13 +405,15 @@ class trajectory():
         for frame_obj in self.list_of_frames:
             f.write("%d\n" % self.particles)
             f.write("frame = %d" % frame_obj.frame)
-            f.write(", Lx= %lf, Ly= %lf, Lz= %lf" %
+            f.write(", Lx= %lf, Ly= %lf, Lz= %lf\n" %
                     (frame_obj.cell[0], frame_obj.cell[1], frame_obj.cell[2]))
 
             for i in range(self.particles):
                 f.write(types[frame_obj.type[i]])
                 f.write(" %lf %lf %lf\n" % (
                     frame_obj.coordinates[i, 0], frame_obj.coordinates[i, 1], frame_obj.coordinates[i, 2]))
+
+        f.close()
 
 
 def read_trajectory(file_name):
@@ -616,3 +618,105 @@ def read_patch_info(patch_file_name):
         labels = f.readline()
 
     return patches(n_patch, eps_vals, lambda_vals, cos_delta_vals, patch_vectors, types)
+
+def write_frame_with_cluster_info(frame_obj,clusters,file_name):
+    types = ['N','C','O','H','S','P','Na', 'Mg', 'Cl', 'Si']
+
+    f = open(file_name, 'w')
+    f.write("%d\n" % frame_obj.particle)
+    f.write("Lx= %lf, Ly= %lf, Lz= %lf\n" % (frame_obj.cell[0], frame_obj.cell[1], frame_obj.cell[2]))
+    for cluster in clusters:
+        type = random.choice(types)
+        for p in cluster:
+            f.write(type)
+            f.write(" %lf %lf %lf\n" % (frame_obj.coordinates[p, 0], frame_obj.coordinates[p, 1], frame_obj.coordinates[p, 2]))
+
+    f.close()
+
+def get_cluster_rg(frame_obj,clusters):
+    cell = frame_obj.cell
+    rgs = []
+    for cluster in clusters:
+        positions = []
+        for i in cluster:
+            x = frame_obj.coordinates[i,0]
+            y = frame_obj.coordinates[i,1]
+            z = frame_obj.coordinates[i,2]
+
+            positions.append([x,y,z])
+
+        positions = np.array(positions)
+        positions = make_molecule_whole(positions,cell)
+        rg = calculate_rg(positions)
+        rgs.append(rg)
+
+    return rgs
+
+
+def make_molecule_whole(xyz,cell):
+    reference_particle = xyz[0,:]
+    new_xyz = np.zeros(xyz.shape)
+    for i,pos in enumerate(xyz):
+        dist = pos - reference_particle
+        dist = nearest_image(dist,cell)
+        pos = dist + reference_particle
+        new_xyz[i,:] = pos
+
+    return new_xyz
+
+
+def calculate_rg(xyz):
+    N,d = xyz.shape
+    com = np.sum(xyz,axis=0)
+    com /= N
+    xyz -= com
+    
+    rg = 0.
+    for pos in xyz:
+        rg += pos[0] ** 2 + pos[1] ** 2 + pos[2] ** 2
+
+    rg /= N
+    return rg
+
+def get_number_of_cycles(clusters,bonds):
+    n_cycles = []
+    for cluster in clusters:
+        relevant_bonds = []
+        for particle in cluster:
+            for bond in bonds:
+                if particle in bond:
+                    relevant_bonds.append(bond)
+
+        relevant_bonds = list(set(relevant_bonds))
+        G = nx.Graph()
+        G.add_edges_from(relevant_bonds)
+        cycles = list(nx.cycle_basis(G))
+
+        n_cycles.append(len(cycles))
+
+    return n_cycles
+
+def write_biggest_cluster_xyz(clusters,frame_obj, file_name):
+    # get the biggest cluster
+    max_size = 0
+    biggest_cluster = []
+    for cluster in clusters:
+        if len(cluster) > max_size:
+            max_size = len(cluster)
+            biggest_cluster = cluster
+    
+    xyz = np.zeros((max_size,3))
+    for i,particle in enumerate(biggest_cluster):
+        xyz[i,:] = frame_obj.coordinates[particle,:]
+
+    xyz = make_molecule_whole(xyz,frame_obj.cell)
+    print("writing biggest cluster")
+    
+    f = open(file_name,'w')
+    f.write("%d\n"%max_size)
+    f.write("Lx= %lf, Ly= %lf, Lz= %lf\n" % (frame_obj.cell[0], frame_obj.cell[1], frame_obj.cell[2]))
+    for pos in xyz:
+        f.write('N ')
+        f.write(" %lf %lf %lf\n" % (pos[0],pos[1],pos[2]))
+
+    f.close()

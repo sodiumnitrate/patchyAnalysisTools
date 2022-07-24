@@ -36,10 +36,21 @@ if check:
 
 clusters = trajectory.find_all_clusters(bonds)
 print("There are %d clusters!"%len(clusters))
-trajectory.plot_clusters(last_frame,clusters)
+#trajectory.plot_clusters(last_frame,clusters)
 
 percolated_clusters = trajectory.find_percolating_clusters(last_frame, clusters)
 if trajectory.is_system_percolated(last_frame,clusters):
     print("system is percolated!")
 else:
     print("system is not percolated!")
+
+trajectory.write_frame_with_cluster_info(last_frame,clusters,"last_frame_clusters.xyz")
+
+rgs = trajectory.get_cluster_rg(last_frame,clusters)
+plt.hist(rgs)
+plt.show()
+
+n_cycles = trajectory.get_number_of_cycles(clusters,bonds)
+print(n_cycles)
+
+trajectory.write_biggest_cluster_xyz(clusters,last_frame,"biggest_cluster.xyz")
