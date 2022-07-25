@@ -7,10 +7,10 @@ import networkx as nx
 from . import utils
 
 class frame():
-    def __init__(self, particles, frame, coordinates, cell, time_stamp, orientation=None, bonding=None, type=None):
+    def __init__(self, n_particles, n_frame, coordinates, cell, time_stamp, orientation=None, bonding=None, type=None):
         # TODO: change var names that are scalars to contain the word "number" or letter "n"
-        self.particle = particles
-        self.frame = frame
+        self.n_particles = n_particles
+        self.n_frame = n_frame
         self.coordinates = coordinates
         self.orientation = orientation
         self.bonding = bonding
@@ -22,21 +22,21 @@ class frame():
         self.check_data()
 
     def check_data(self):
-        if not isinstance(self.particle, int):
+        if not isinstance(self.n_particles, int):
             print("WARNING: non-integer particle number")
-        elif self.particle <= 0:
+        elif self.n_particles <= 0:
             print("WARNING: particle number <= 0")
 
-        if not isinstance(self.frame, int):
+        if not isinstance(self.n_frame, int):
             print("WARNING: non-integer frame number")
-        elif self.frame < 0:
+        elif self.n_frame < 0:
             print("WARNING: frame number < 0")
 
         if type(self.coordinates).__module__ != np.__name__:
             print("WARNING: coordinates must be contained in a numpy array")
         else:
             m, n = self.coordinates.shape
-            if m != self.particle:
+            if m != self.n_particles:
                 print(
                     "WARNING: number of coordinates do not match the number of particles")
             if n != 3:
@@ -54,7 +54,7 @@ class frame():
                 print("WARNING: orientations must be contained in a numpy array")
             else:
                 m, n = self.orientation.shape
-                if m != self.particle:
+                if m != self.n_particles:
                     print(
                         "WARNING: number of orientations do not match the number of particles")
                 if n != 3:
@@ -65,7 +65,7 @@ class frame():
                 print("WARNING: bonding info must be contained in a numpy array")
             else:
                 m = self.bonding.shape[0]
-                if m != self.particle:
+                if m != self.n_particles:
                     print(
                         "WARNING: number of bonding info do not match the number of particles")
 
@@ -74,7 +74,7 @@ class frame():
                 print("WARNING: type info must be contained in a numpy array")
             else:
                 m = self.type.shape[0]
-                if m != self.particle:
+                if m != self.n_particles:
                     print(
                         "WARNING: number of bonditypeng info do not match the number of particles")
 
@@ -87,8 +87,8 @@ class frame():
 
         bonds = []
         # loop over pairs of particles (i,j) s.t. j>i
-        for i in range(self.particle):
-            for j in range(i+1, self.particle):
+        for i in range(self.n_particles):
+            for j in range(i+1, self.n_particles):
                 pos_i = self.coordinates[i, :]
                 pos_j = self.coordinates[j, :]
 
@@ -147,13 +147,13 @@ class frame():
 
 
 def check_calculated_bonds_against_bond_numbers(frame, bonds):
-    bond_numbers = np.zeros(frame.particle)
+    bond_numbers = np.zeros(frame.n_particles)
     for bond in bonds:
         bond_numbers[bond[0]] += 1
         bond_numbers[bond[1]] += 1
 
     correct = True
-    for i in range(frame.particle):
+    for i in range(frame.n_particles):
         if bond_numbers[i] != frame.bonding[i]:
             correct = False
             print("Particle i has %d bonds from calc, but traj file says %d" %
@@ -171,7 +171,7 @@ def get_bond_probability(frame, patch_object):
 
     max_bonds = 0
     curr_bonds = 0
-    for i in range(frame.particle):
+    for i in range(frame.n_particles):
         type = frame.type[i]
         bonds = frame.bonding[i]
         max_bonds += n_patches_per_type[type]
@@ -350,10 +350,10 @@ class trajectory():
         self.check_data()
 
         if particles is None:
-            self.particles = self.list_of_frames[0].particle
+            self.particles = self.list_of_frames[0].n_particles
         else:
             self.particles = particles
-            if self.particles != self.list_of_frames[0].particle:
+            if self.particles != self.list_of_frames[0].n_particles:
                 sys.exit("ERROR: particle number mismatch")
 
         if frames is None:
@@ -394,7 +394,7 @@ class trajectory():
         f = open(file_name, 'w')
         for frame_obj in self.list_of_frames:
             f.write("%d\n" % self.particles)
-            f.write("frame = %d" % frame_obj.frame)
+            f.write("frame = %d" % frame_obj.n_frame)
             f.write(", Lx= %lf, Ly= %lf, Lz= %lf\n" %
                     (frame_obj.cell[0], frame_obj.cell[1], frame_obj.cell[2]))
 
@@ -613,7 +613,7 @@ def write_frame_with_cluster_info(frame_obj,clusters,file_name):
     types = ['N','C','O','H','S','P','Na', 'Mg', 'Cl', 'Si']
 
     f = open(file_name, 'w')
-    f.write("%d\n" % frame_obj.particle)
+    f.write("%d\n" % frame_obj.n_particles)
     f.write("Lx= %lf, Ly= %lf, Lz= %lf\n" % (frame_obj.cell[0], frame_obj.cell[1], frame_obj.cell[2]))
     for cluster in clusters:
         type = random.choice(types)
@@ -636,37 +636,12 @@ def get_cluster_rg(frame_obj,clusters):
             positions.append([x,y,z])
 
         positions = np.array(positions)
-        positions = make_molecule_whole(positions,cell)
-        rg = calculate_rg(positions)
+        positions = utils.make_molecule_whole(positions,cell)
+        rg = utils.calculate_rg(positions)
         rgs.append(rg)
 
     return rgs
 
-
-def make_molecule_whole(xyz,cell):
-    reference_particle = xyz[0,:]
-    new_xyz = np.zeros(xyz.shape)
-    for i,pos in enumerate(xyz):
-        dist = pos - reference_particle
-        dist = utils.nearest_image(dist,cell)
-        pos = dist + reference_particle
-        new_xyz[i,:] = pos
-
-    return new_xyz
-
-
-def calculate_rg(xyz):
-    N,d = xyz.shape
-    com = np.sum(xyz,axis=0)
-    com /= N
-    xyz -= com
-    
-    rg = 0.
-    for pos in xyz:
-        rg += pos[0] ** 2 + pos[1] ** 2 + pos[2] ** 2
-
-    rg /= N
-    return rg
 
 def get_number_of_cycles(clusters,bonds):
     n_cycles = []
@@ -699,7 +674,7 @@ def write_biggest_cluster_xyz(clusters,frame_obj, file_name):
     for i,particle in enumerate(biggest_cluster):
         xyz[i,:] = frame_obj.coordinates[particle,:]
 
-    xyz = make_molecule_whole(xyz,frame_obj.cell)
+    xyz = utils.make_molecule_whole(xyz,frame_obj.cell)
     print("writing biggest cluster")
     
     f = open(file_name,'w')

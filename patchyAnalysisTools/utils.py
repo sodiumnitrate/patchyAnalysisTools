@@ -55,3 +55,27 @@ def nearest_image(d, cell):
             d[i] += cell[i]
 
     return d
+
+def make_molecule_whole(xyz,cell):
+    reference_particle = xyz[0,:]
+    new_xyz = np.zeros(xyz.shape)
+    for i,pos in enumerate(xyz):
+        dist = pos - reference_particle
+        dist = nearest_image(dist,cell)
+        pos = dist + reference_particle
+        new_xyz[i,:] = pos
+
+    return new_xyz
+
+def calculate_rg(xyz):
+    N,d = xyz.shape
+    com = np.sum(xyz,axis=0)
+    com /= N
+    xyz -= com
+    
+    rg = 0.
+    for pos in xyz:
+        rg += pos[0] ** 2 + pos[1] ** 2 + pos[2] ** 2
+
+    rg /= N
+    return rg
