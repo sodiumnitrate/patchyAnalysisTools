@@ -363,6 +363,7 @@ def rotate_vector(angles, vector):
 class trajectory():
     def __init__(self, list_of_frames, particles=None, frames=None):
         self.list_of_frames = list_of_frames
+        self.n_frames = len(self.list_of_frames)
 
         self.check_data()
 
@@ -421,6 +422,47 @@ class trajectory():
                     frame_obj.coordinates[i, 0], frame_obj.coordinates[i, 1], frame_obj.coordinates[i, 2]))
 
         f.close()
+
+    def position_autocorrelation(self,start=None,dt=500,dx=1):
+        if start is None:
+            # if no start is provided, start from 1/3rd of the traj
+            start = int(self.n_frames/3)
+
+        times = []
+        corr_vals = []
+        for i,frame in enumerate(self.list_of_frames):
+            xyz = frame.coordinates
+            if i == start:
+                time = 0
+                xyz_first = np.copy(xyz)
+            # skip frames before start
+            elif i < start:
+                continue
+
+            time += dt
+            corr = 0
+
+            for j, atom in enumerate(xyz):
+                # check how much the particle moved
+                dist = xyz[j] - xyz_first[j]
+                # take into account pbc
+                dist = utils.nearest_image(dist,frame.cell)
+                # calculate distance
+                d = np.linalg.norm(dist)
+
+                # if the distance is smaller than a cutoff distance
+                # (typically chosen as 1 particle diameter)
+                if d < dx:
+                    # then decide that the particle has not moved away sufficiently
+                    corr += 1.
+
+            # get the fraction of immobile particles
+            corr /= frame.n_particles
+
+            times.append(time)
+            corr_vals.append(corr)
+        return times, corr_vals
+
 
 
 def read_trajectory(file_name):
