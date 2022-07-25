@@ -48,7 +48,6 @@ py::array_t<double> RDF_virtualcopies(
     // create histogram (the box with itself)
     for (i = 0; i < nparts; i++)
     {
-        //std::cout << i << " " << x[i] << " " << y[i] << " " << z[i] << std::endl;
         for (j = i+1; j < nparts; j++)
         {
 
@@ -103,8 +102,6 @@ py::array_t<double> RDF_virtualcopies(
 
     return result;
 }
-
-
 
 PYBIND11_MODULE(RDF, m)
 {

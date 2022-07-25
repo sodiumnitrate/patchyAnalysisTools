@@ -6,7 +6,6 @@
 
 namespace py = pybind11;
 
-//py::array_t<double> sq(const int g, double L, py::array_t<double> points, int numpoints)
 py::array_t<double> sq(const int g, double L, py::array_t<double, py::array::c_style | py::array::forcecast> points, int numpoints)
 {
     // process numpy array inputs from the python side
