@@ -1,10 +1,10 @@
 from more_itertools import last
-from patchyAnalysisTools.trajectory import trajectory
 import matplotlib.pyplot as plt
 import pdb
+import patchyAnalysisTools.trajectory as trj
 
 # load trajectory
-traj = trajectory.read_trajectory("trajectory.conf")
+traj = trj.read_trajectory("trajectory.conf")
 
 # get the first ten frames as a subtrajectory
 subtraj = traj.get_frame(0,10)
@@ -16,10 +16,10 @@ subtraj.write_xyz("frames_0_10.xyz")
 one_frame = traj.get_frame(0)
 
 # read patch file
-patches_object = trajectory.read_patch_info("patches.dat")
+patches_object = trj.read_patch_info("patches.dat")
 print("number of patches: ", patches_object.n_patch)
 
-pb = trajectory.get_bond_probability(one_frame,patches_object)
+pb = trj.get_bond_probability(one_frame,patches_object)
 print("bond probability: %lf"%pb)
 
 # create a sliced image from the frame
@@ -30,27 +30,27 @@ print("bond probability: %lf"%pb)
 # get the last frame
 last_frame = traj.get_last_frame()
 bonds = last_frame.get_list_of_interacting_pairs(patches_object)
-check = trajectory.check_calculated_bonds_against_bond_numbers(last_frame,bonds)
+check = trj.check_calculated_bonds_against_bond_numbers(last_frame,bonds)
 if check:
     print("bond counts match!")
 
-clusters = trajectory.find_all_clusters(bonds)
+clusters = trj.find_all_clusters(bonds)
 print("There are %d clusters!"%len(clusters))
 #trajectory.plot_clusters(last_frame,clusters)
 
-percolated_clusters = trajectory.find_percolating_clusters(last_frame, clusters)
-if trajectory.is_system_percolated(last_frame,clusters):
+percolated_clusters = trj.find_percolating_clusters(last_frame, clusters)
+if trj.is_system_percolated(last_frame,clusters):
     print("system is percolated!")
 else:
     print("system is not percolated!")
 
-trajectory.write_frame_with_cluster_info(last_frame,clusters,"last_frame_clusters.xyz")
+trj.write_frame_with_cluster_info(last_frame,clusters,"last_frame_clusters.xyz")
 
-rgs = trajectory.get_cluster_rg(last_frame,clusters)
+rgs = trj.get_cluster_rg(last_frame,clusters)
 plt.hist(rgs)
 plt.show()
 
-n_cycles = trajectory.get_number_of_cycles(clusters,bonds)
+n_cycles = trj.get_number_of_cycles(clusters,bonds)
 print(n_cycles)
 
-trajectory.write_biggest_cluster_xyz(clusters,last_frame,"biggest_cluster.xyz")
+trj.write_biggest_cluster_xyz(clusters,last_frame,"biggest_cluster.xyz")

@@ -4,6 +4,7 @@ import pdb
 import matplotlib.pyplot as plt
 import random
 import networkx as nx
+from . import utils
 
 class frame():
     def __init__(self, particles, frame, coordinates, cell, time_stamp, orientation=None, bonding=None, type=None):
@@ -95,7 +96,7 @@ class frame():
                 dist = pos_i - pos_j
 
                 # periodic boundary conditions
-                dist = nearest_image(dist, cell)
+                dist = utils.nearest_image(dist, cell)
 
                 # squared distance between particles
                 d2 = dist[0]**2 + dist[1]**2 + dist[2]**2
@@ -143,17 +144,6 @@ class frame():
                     bonds.append((i, j))
 
         return bonds
-
-
-def nearest_image(d, cell):
-    for i in range(3):
-        hbox = cell[i] / 2
-        if d[i] > hbox:
-            d[i] -= cell[i]
-        elif d[i] < -hbox:
-            d[i] += cell[i]
-
-    return d
 
 
 def check_calculated_bonds_against_bond_numbers(frame, bonds):
@@ -658,7 +648,7 @@ def make_molecule_whole(xyz,cell):
     new_xyz = np.zeros(xyz.shape)
     for i,pos in enumerate(xyz):
         dist = pos - reference_particle
-        dist = nearest_image(dist,cell)
+        dist = utils.nearest_image(dist,cell)
         pos = dist + reference_particle
         new_xyz[i,:] = pos
 
