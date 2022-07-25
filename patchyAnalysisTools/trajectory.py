@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import random
 import networkx as nx
 from . import utils
+from . import rdf_sq
 
 class frame():
     def __init__(self, n_particles, n_frame, coordinates, cell, time_stamp, orientation=None, bonding=None, type=None):
@@ -144,6 +145,22 @@ class frame():
                     bonds.append((i, j))
 
         return bonds
+    
+    def calculate_rdf(self,binsize=0.1):
+        cell=self.cell
+        # make sure we have a cubic box
+        # TODO: generalize the rdf function to a rectangular box
+        np.testing.assert_allclose(cell[:3],cell[0],rtol=1e-5)
+        r,gr = rdf_sq.calculate_rdf(self.coordinates,self.n_particles,cell[0],binsize=binsize)
+        return r,gr
+
+    def calculate_sq(self,g=30):
+        cell = self.cell
+        # make sure we have a cubic box
+        # TODO: generalize to a rectangular box
+        np.testing.assert_allclose(cell[:3],cell[0],rtol=1e-5)
+        k,sk = rdf_sq.calculate_sq(self.n_particles,self.coordinates,cell[0],g=g)
+        return k,sk
 
 
 def check_calculated_bonds_against_bond_numbers(frame, bonds):
