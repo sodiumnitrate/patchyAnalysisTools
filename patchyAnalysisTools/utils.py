@@ -1,7 +1,11 @@
+from importlib_metadata import re
 from . import trajectory
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+import random
+import pdb
+import networkx as nx
 
 def get_cluster_rg(frame_obj,clusters):
     cell = frame_obj.cell
@@ -74,17 +78,6 @@ def plot_clusters(frame):
 
     plt.show()
 
-def make_molecule_whole(xyz,cell):
-    reference_particle = xyz[0,:]
-    new_xyz = np.zeros(xyz.shape)
-    for i,pos in enumerate(xyz):
-        dist = pos - reference_particle
-        dist = nearest_image(dist,cell)
-        pos = dist + reference_particle
-        new_xyz[i,:] = pos
-
-    return new_xyz
-
 
 def calculate_rg(xyz):
     N,d = xyz.shape
@@ -102,24 +95,28 @@ def calculate_rg(xyz):
 def nearest_image(d, cell):
     for i in range(3):
         hbox = cell[i] / 2
-        if d[i] > hbox:
+
+        while d[i] > hbox:
             d[i] -= cell[i]
-        elif d[i] < -hbox:
+
+        while d[i] < -hbox:
             d[i] += cell[i]
 
     return d
 
-def make_molecule_whole(xyz,cell):
-    # TODO: there's a bug in this function somewhere -- fix it
-    reference_particle = xyz[0,:]
-    new_xyz = np.zeros(xyz.shape)
-    for i,pos in enumerate(xyz):
-        dist = pos - reference_particle
-        dist = nearest_image(dist,cell)
-        pos = dist + reference_particle
-        new_xyz[i,:] = pos
+def make_molecule_whole(xyz,cell,relevant_bonds):
+    G = nx.Graph()
+    G.add_edges_from(relevant_bonds)
+    pos = dict(enumerate(xyz))
+    
+    dx = (cell[0] / 2) * any( 2 * abs(pos[u][0] - pos[v][0]) > cell[0] for u,v in relevant_bonds)
+    dy = (cell[1] / 2) * any( 2 * abs(pos[u][1] - pos[v][1]) > cell[1] for u,v in relevant_bonds)
+    dz = (cell[2] / 2) * any( 2 * abs(pos[u][2] - pos[v][2]) > cell[2] for u,v in relevant_bonds)
 
-    return new_xyz
+    new_pos = [[(x+dx)%cell[0], (y+dy)%cell[1], (z+dz)%cell[2]] for v,(x,y,z) in pos.items() if v in list(G.nodes)]
+
+    return np.array(new_pos)
+
 
 def calculate_rg(xyz):
     N,_ = xyz.shape

@@ -61,6 +61,7 @@ class cluster_info():
                     if particle in bond:
                         bondlist.append(bond)
 
+            bondlist = list(set(bondlist))
             relevant_bonds.append(copy.copy(bondlist))
 
         self.relevant_bonds = relevant_bonds
@@ -120,6 +121,7 @@ def select_cluster(node, bonds):
         curr = Q[0]
         Q = Q[1:]
         selected.append(curr)
+        # TODO: use nx.adj here instead for a possible performance improvement
         for (i, j) in bonds:
             if curr == i and j not in selected:
                 Q.append(j)

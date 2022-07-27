@@ -342,17 +342,9 @@ class frame():
         # (may want to exclude percolating ones when calculating stats)
         cell = self.cell
         rgs = []
-        for cluster in self.cluster_info.clusters:
-            positions = []
-            for i in cluster:
-                x = self.coordinates[i,0]
-                y = self.coordinates[i,1]
-                z = self.coordinates[i,2]
-                
-                positions.append([x,y,z])
-                
-            positions = np.array(positions)
-            positions = utils.make_molecule_whole(positions,cell)
+        for i,cluster in enumerate(self.cluster_info.clusters):
+            relevant_bonds = self.cluster_info.relevant_bonds[i]
+            positions = utils.make_molecule_whole(self.coordinates,cell,relevant_bonds)
             rg = utils.calculate_rg(positions)
             rgs.append(rg)
 
@@ -361,17 +353,13 @@ class frame():
     def write_biggest_cluster_xyz(self,file_name):
         # get the biggest cluster and write it to an .xyz file
         max_size = 0
-        biggest_cluster = []
-        for cluster in self.cluster_info.clusters:
+        relevant_bonds = []
+        for i,cluster in enumerate(self.cluster_info.clusters):
             if len(cluster) > max_size:
                 max_size = len(cluster)
-                biggest_cluster = cluster
+                relevant_bonds = self.cluster_info.relevant_bonds[i]
 
-        xyz = np.zeros((max_size,3))
-        for i, particle in enumerate(biggest_cluster):
-            xyz[i,:] = self.coordinates[particle,:]
-
-        xyz = utils.make_molecule_whole(xyz,self.cell)
+        xyz = utils.make_molecule_whole(self.coordinates,self.cell,relevant_bonds)
         
         f = open(file_name, 'w')
         f.write("%d\n"%max_size)
