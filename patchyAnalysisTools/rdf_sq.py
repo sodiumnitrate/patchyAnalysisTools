@@ -30,7 +30,7 @@ def calculate_rdf(points, N, L, binsize=0.1):
 
     # calculate gr
     gr = rdfcpp.RDF_virtualcopies(x, y, z, L, cutoff, binsize, nbins, rho, N)
-    return r, gr
+    return r[:-1], gr[:-1]
 
 def calculate_sq(n_particles, points, L, g=30):
     '''
@@ -39,6 +39,12 @@ def calculate_sq(n_particles, points, L, g=30):
     points - coordinates
     g - max num of bins (default = 30)
     '''
+    x = points[:,0]
+    y = points[:,1]
+    z = points[:,2]
+
+    points = np.array([x,y,z])
+
     # get bin size
     binsize = 2*np.pi/L
     # max k vector
