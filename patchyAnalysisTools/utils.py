@@ -1,4 +1,3 @@
-from importlib_metadata import re
 from . import trajectory
 import numpy as np
 import matplotlib.pyplot as plt
