@@ -431,12 +431,17 @@ class frame():
         # get the biggest cluster and write it to an .xyz file
         max_size = 0
         relevant_bonds = []
+        max_ind = 0
         for i,cluster in enumerate(self.cluster_info.clusters):
             if len(cluster) > max_size:
                 max_size = len(cluster)
+                max_ind = i
                 relevant_bonds = self.cluster_info.relevant_bonds[i]
 
-        xyz = utils.make_molecule_whole(self.coordinates,self.cell,relevant_bonds)
+        if self.cluster_info.percolated_clusters[max_ind] == 1:
+            xyz = self.coordinates
+        else:
+            xyz = utils.make_molecule_whole(self.coordinates,self.cell,relevant_bonds)
         
         f = open(file_name, 'w')
         f.write("%d\n"%max_size)

@@ -45,3 +45,16 @@ for l in loops[0]:
         sel_types.append(atom)
         selected.append(p)
 traj.write_xyz("first_cluster_loops.xyz",selected=selected, sel_types=sel_types)
+
+# get chains and write longest chain for each cluster to file
+chains = last_frame.cluster_info.chains
+selected = []
+sel_types = []
+atom = 0
+for c in chains:
+    # each chain with a different atom
+    atom = (atom + 1) % 5
+    for p in c:
+        sel_types.append(atom)
+        selected.append(p)
+traj.write_xyz("longest_chains.xyz",selected=selected, sel_types=sel_types)

@@ -1,6 +1,7 @@
 import copy
 import networkx as nx
 import pdb
+import numpy as np
 
 '''
 
@@ -20,6 +21,7 @@ class cluster_info():
         self.N_loop = None
         self.loops = None
         self.L_chain = None
+        self.chains = None
         self.R_g = None
         self.S_cluster = None
 
@@ -103,19 +105,26 @@ class cluster_info():
             self.get_relevant_bonds()
 
         L_chain = []
+        chain = []
         for i,cluster in enumerate(self.clusters):
             G = nx.Graph()
             G.add_edges_from(self.relevant_bonds[i])
             
             p = nx.shortest_path(G)
             paths = []
+            chains = []
             for i in cluster:
                 for j in cluster:
                     length = len(p[i][j])
                     paths.append(length)
-            L_chain.append(max(paths))
+                    chains.append(p[i][j])
+
+            ind = np.argmax(paths)
+            L_chain.append(paths[ind])
+            chain.append(chains[ind])
 
         self.L_chain = L_chain
+        self.chains = chain
 
 
 def select_cluster(node, bonds):
