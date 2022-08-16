@@ -1,3 +1,5 @@
+from distutils.dep_util import newer_pairwise
+from re import S
 import numpy as np
 import sys
 import pdb
@@ -15,7 +17,7 @@ class frame():
     The frame class holds all info related to a snapshot in a simulation trajectory.
     
     '''
-    def __init__(self, n_particles, n_frame, coordinates, cell, time_stamp, orientation=None, bonding=None, type=None):
+    def __init__(self, n_particles, n_frame, coordinates, cell, time_stamp, box_num=None, orientation=None, bonding=None, type=None):
         self.n_particles = n_particles
         self.n_frame = n_frame
         self.coordinates = coordinates
@@ -25,11 +27,17 @@ class frame():
         self.cell = cell
         self.time_stamp = time_stamp
 
+        self.box_num = box_num
+
+        self.sim_type = None
+
         # the following are optional and can be set using methods below
         self.patches = None
         self.cluster_info = None
         self.bonds_calculated = None
         self.percolated = None
+        self.energy = None
+        self.n_particles_box = None
 
         # check that the provided data types make sense
         self.check_data()
@@ -72,8 +80,15 @@ class frame():
             print("WARNING: cell info must be contained in a numpy array")
         else:
             m = self.cell.shape[0]
-            if m != 6:
+            #TODO: find out what's wrong with this
+            '''if m != 6 or m != 4 or m != 3:
                 print("WARNING: invalid cell array shape")
+                print(self.cell, self.cell.shape,m)'''
+
+            if m == 4 and self.box_num is not None:
+                self.sim_type = 'GE'
+            else:
+                self.sim_type = 'regular'
 
         if self.orientation is not None:
             if type(self.orientation).__module__ != np.__name__:
@@ -109,6 +124,9 @@ class frame():
         if self.patches is None:
             sys.exit("ERROR: need to set patch info via frame.set_patch_info(file_name)")
 
+        if self.orientation is None:
+            sys.exit("ERROR: can't determine bonds without particle orientations")
+
         patch_obj = self.patches
         # TODO: make this more efficient with neighbor lists
         cell = self.cell
@@ -116,10 +134,24 @@ class frame():
         # get the square of the maximum lambda value to use as a threshold distance
         max_lambda_sq = (np.max(patch_obj.lambda_vals))**2
 
-        bonds = []
+        # calculate energy
+        if self.sim_type == 'GE':
+            energy = [0.,0.]
+            bonds = [[],[]]
+        else:
+            energy = [0.]
+            bonds = [[]]
+
         # loop over pairs of particles (i,j) s.t. j>i
         for i in range(self.n_particles):
             for j in range(i+1, self.n_particles):
+                if self.sim_type == 'GE':
+                    if self.box_num[i] != self.box_num[j]:
+                        continue
+                    #TODO: make cell into a list of lists so that you eliminate the need for this
+                    L = self.cell[2*self.box_num[i]]
+                    cell = [L, L, L]
+
                 pos_i = self.coordinates[i, :]
                 pos_j = self.coordinates[j, :]
 
@@ -137,16 +169,21 @@ class frame():
                 # check if distance is less than the threshold value chosen above
                 if d2 <= max_lambda_sq:
                     # types of particles
-                    type_i = self.type[i]
-                    type_j = self.type[j]
+                    if self.type is not None:
+                        type_i = self.type[i]
+                        type_j = self.type[j]
 
                     # loop over all patch pairs
                     # TODO: you can create this list above and avoid using the continue statements
                     for pi in range(patch_obj.n_patch):
-                        if patch_obj.types[pi] != type_i:
-                            continue
+                        if self.type is not None:
+                            if patch_obj.types[pi] != type_i:
+                                continue
                         for pj in range(patch_obj.n_patch):
-                            if patch_obj.types[pj] != type_j:
+                            if self.type is not None:
+                                if patch_obj.types[pj] != type_j:
+                                    continue
+                            if patch_obj.adjacency[pi,pj] != 1:
                                 continue
 
                             # get orientations of particles
@@ -164,17 +201,18 @@ class frame():
                             # if the orientation is correct
                             if correct_orientation:
                                 # make sure the interacting patches have the same lambda value
-                                assert(
-                                    patch_obj.lambda_vals[pi] == patch_obj.lambda_vals[pj])
+                                assert(patch_obj.lambda_vals[pi] == patch_obj.lambda_vals[pj])
                                 d = np.sqrt(d2)
                                 # final check of distance
                                 if d <= patch_obj.lambda_vals[pi]:
                                     # the particles are interacting
                                     interacting = True
+                                    energy[self.box_num[i]] += -0.5*(patch_obj.eps_vals[pi] + patch_obj.eps_vals[pj])
                 if interacting:
-                    bonds.append((i, j))
+                    bonds[self.box_num[i]].append((i,j))
 
         self.bonds_calculated = bonds
+        self.energy = energy
 
     def check_calculated_bonds_against_bond_numbers(self):
         # make sure that the calculated number of bonds per particle matches what's written in the trajectory file
@@ -184,16 +222,17 @@ class frame():
             print("bonding info not available")
             return
         bond_numbers = np.zeros(self.n_particles)
-        for bond in self.bonds_calculated:
-            bond_numbers[bond[0]] += 1
-            bond_numbers[bond[1]] += 1
-            
+        for j in range(len(self.bonds_calculated)):
+            for bond in self.bonds_calculated[j]:
+                bond_numbers[bond[0]] += 1
+                bond_numbers[bond[1]] += 1
+                
         correct = True
         for i in range(self.n_particles):
             if bond_numbers[i] != self.bonding[i]:
                 correct = False
                 print("Particle i has %d bonds from calc, but traj file says %d" %
-                  (bond_numbers[i], self.bonding[i]))
+                (bond_numbers[i], self.bonding[i]))
 
         if not correct:
             sys.exit("There's a problem with the calculated bond numbers")
@@ -201,23 +240,40 @@ class frame():
             print("Bond counts match!")
         
     
-    def calculate_rdf(self,binsize=0.1):
+    def calculate_rdf(self,binsize=0.1,box=0):
         # calculate the radial distribution function
-        cell=self.cell
+        if self.sim_type == 'GE':
+            L = self.cell[2*box]
+            cell = np.array([L,L,L])
+            xyz = self.coordinates[np.where(self.box_num == box),:][0]
+            n_particles = self.n_particles_box[box]
+        else:
+            cell=self.cell
+            xyz = self.coordinates
+            n_particles = self.n_particles
         # TODO: (low-prio) generalize the rdf function to a rectangular box
 
         # make sure we have a cubic box
         np.testing.assert_allclose(cell[:3],cell[0],rtol=1e-5)
-        r,gr = rdf_sq.calculate_rdf(self.coordinates,self.n_particles,cell[0],binsize=binsize)
+        r,gr = rdf_sq.calculate_rdf(xyz,n_particles,cell[0],binsize=binsize)
         return r,gr
 
-    def calculate_sq(self,g=30):
+    def calculate_sq(self,g=30,box=0):
+        #TODO: make sure this isn't buggy
         # calculate the structure factors
-        cell = self.cell
+        if self.sim_type == 'GE':
+            L = self.cell[2*box]
+            cell = np.array([L,L,L])
+            xyz = self.coordinates[np.where(self.box_num == box),:][0]
+            n_particles = self.n_particles_box[box]
+        else:
+            cell = self.cell
+            xyz = self.coordinates
+            n_particles = self.n_particles
         # make sure we have a cubic box
         # TODO: generalize to a rectangular box
         np.testing.assert_allclose(cell[:3],cell[0],rtol=1e-5)
-        k,sk = rdf_sq.calculate_sq(self.n_particles,self.coordinates,cell[0],g=g)
+        k,sk = rdf_sq.calculate_sq(n_particles,xyz,cell[0],g=g)
         return k,sk
         
     def get_bond_probability(self):
@@ -241,9 +297,13 @@ class frame():
             
         return curr_bonds/max_bonds
 
-    def find_percolating_clusters(self,max_lambda=1.1):
+    def find_percolating_clusters(self,max_lambda=1.1,box=0):
         # find out which clusters percolate
-        cell = self.cell
+        if self.sim_type == 'GE':
+            L = self.cell[2*box]
+            cell = np.array([L,L,L])
+        else:
+            cell = self.cell
         grid_spacing = 0.1
         clusters = self.cluster_info.clusters
 
@@ -277,41 +337,58 @@ class frame():
                     iyy = (sy + triple[1]) % ny
                     izz = (sz + triple[2]) % nz
                     
-                    grid[ixx, iyy, izz] = 1
-                    
-                    
-                xy_plane = np.sum(grid, axis=2)
-                yz_plane = np.sum(grid, axis=0)
+                    grid[ixx, iyy, izz] = 1    
+
+            xy_plane = np.sum(grid, axis=2)
+            yz_plane = np.sum(grid, axis=0)
                 
-                # reduce dimensions to project connectivity onto axes and bin the data to overcome discretization errors
-                binsize = 0.2
-                nxs = int(cell[0] / binsize) + 1
-                nys = int(cell[1] / binsize) + 1
-                nzs = int(cell[2] / binsize) + 1
+            # reduce dimensions to project connectivity onto axes and bin the data to overcome discretization errors
+            binsize = 0.2
+            nxs = int(cell[0] / binsize) + 1
+            nys = int(cell[1] / binsize) + 1
+            nzs = int(cell[2] / binsize) + 1
                 
-                x_axis = np.zeros(nxs)
-                y_axis = np.zeros(nys)
-                z_axis = np.zeros(nzs)
-                for i in range(nx):
-                    bin_ind = int(i*grid_spacing_x/binsize)
+            x_axis = np.zeros(nxs)
+            y_axis = np.zeros(nys)
+            z_axis = np.zeros(nzs)
+            for i in range(nx):
+                bin_ind = int(i*grid_spacing_x/binsize)
                 if np.sum(xy_plane[i, :]) >= 1:
                     x_axis[bin_ind] += 1
                     
-                for i in range(ny):
-                    bin_ind = int(i*grid_spacing_y/binsize)
+            for i in range(ny):
+                bin_ind = int(i*grid_spacing_y/binsize)
                 if np.sum(xy_plane[:, i]) >= 1:
                     y_axis[bin_ind] += 1
                     
-                for i in range(nz):
-                    bin_ind = int(i*grid_spacing_z/binsize)
+            for i in range(nz):
+                bin_ind = int(i*grid_spacing_z/binsize)
                 if np.sum(yz_plane[:, i]) >= 1:
                     z_axis[bin_ind] += 1
                     
-                # percolated if all values >= 1 in along at least one dimension
-                if all(i >= 1 for i in x_axis) or all(i >= 1 for i in y_axis) or all(i >= 1 for i in z_axis):
-                    percolated_clusters[ci] = 1
+            # percolated if all values >= 1 in along at least one dimension
+            if all(i >= 1 for i in x_axis) or all(i >= 1 for i in y_axis) or all(i >= 1 for i in z_axis):
+                percolated_clusters[ci] = 1
 
         self.cluster_info.percolated_clusters = percolated_clusters
+
+    def set_npbox(self):
+        if self.sim_type != 'GE':
+            print("ERROR: simulation type not Gibbs Ensemble. There's only one box")
+            return
+
+        assert(self.box_num is not None)
+
+        npbox = [0,0]
+        for i in self.box_num:
+            if i == 0:
+                npbox[i] += 1
+            elif i == 1:
+                npbox[i] += 1
+            else:
+                print("WARNING: box id different than 0 or 1.")
+
+        self.n_particles_box = npbox
         
     def is_system_percolated(self, max_lambda=1.1):
         # determine if the system percolates
@@ -382,6 +459,8 @@ class trajectory():
         self.n_particles = self.list_of_frames[0].n_particles
 
         self.patches = None
+        
+        self.sim_type = self.list_of_frames[0].sim_type
 
         self.check_data()
 
@@ -416,22 +495,47 @@ class trajectory():
         frame.patches = self.patches
         return frame
 
-    def write_xyz(self, file_name):
+    def write_xyz(self, file_name, selected = None, sel_types = None):
         # up to 5 different types of particles are currently supported
         types = {0: 'N', 1: 'C', 2: 'O', 3: 'H', 4: 'S'}
+
+        different_types = self.list_of_frames[0].type is not None
+
+        if selected == None:
+            selected = list(range(self.n_particles))
+
+        if sel_types != None:
+            assert(selected != None)
+            assert(len(selected) == len(sel_types))
 
         # TODO: add a start and end option
         f = open(file_name, 'w')
         for frame_obj in self.list_of_frames:
-            f.write("%d\n" % self.n_particles)
-            f.write("frame = %d" % frame_obj.n_frame)
-            f.write(", Lx= %lf, Ly= %lf, Lz= %lf\n" %
-                    (frame_obj.cell[0], frame_obj.cell[1], frame_obj.cell[2]))
+            shift = np.amax(frame_obj.cell)+5
 
-            for i in range(self.n_particles):
-                f.write(types[frame_obj.type[i]])
-                f.write(" %lf %lf %lf\n" % (
-                    frame_obj.coordinates[i, 0], frame_obj.coordinates[i, 1], frame_obj.coordinates[i, 2]))
+            f.write("%d\n" % len(selected))
+            f.write("frame = %d" % frame_obj.n_frame)
+            if self.sim_type == 'GE':
+                f.write(", L1=%lf, L2=%lf\n" % (frame_obj.cell[0],frame_obj.cell[1]))
+            else:
+                f.write(", Lx= %lf, Ly= %lf, Lz= %lf\n" % (frame_obj.cell[0], frame_obj.cell[1], frame_obj.cell[2]))
+
+            ct = 0
+            for i in selected:
+                if sel_types != None:
+                    f.write(types[sel_types[ct]])
+                elif different_types:
+                    f.write(types[frame_obj.type[i]])
+                else:
+                    f.write('C')
+                x = frame_obj.coordinates[i,0]
+                y = frame_obj.coordinates[i,1]
+                z = frame_obj.coordinates[i,2]
+                if self.sim_type == 'GE':
+                    if frame_obj.box_num[i] == 1:
+                        x += shift
+                f.write(" %lf %lf %lf\n" % (x,y,z))
+                ct += 1
 
         f.close()
 
@@ -496,26 +600,32 @@ class trajectory():
             orientation = None
             bonding = None
             type = None
+            box_num = None
         elif col_parts == 6:
             bonding = None
             type = None
+            box_num = None
             orientation = []
-        elif col_parts > 8:
-            sys.exit(
-            "Error reading trajectory file. Particle info has more than 8 columns")    
+        elif col_parts == 8:
+            bonding = []
+            type = []
+            box_num =  None
+            orientation = []
+        elif col_parts == 9: # filetype = gibbs ensemble new
+            box_num = []
+            bonding = []
+            type = []
+            orientation = []
+        elif col_parts >= 10: # filetype = gibbs ensemble old
+            box_num = []
+            orientation = []
+            bonding = None
+            type = None
         elif col_parts < 3:
             sys.exit(
             "Error reading trajectory file. Particle info has fewer than 3 columns.")
         elif col_parts == 7:
             sys.exit("Error reading trajectory file. File has 7 columns.")
-        else:
-            bonding = []
-            type = []
-            orientation = []
-            
-        if col_nums[2] != 2:
-            sys.exit(
-            "Error reading trajectory file. The third line should have 2 columns.")
             
         # read the whole file
         with open(file_name, 'r') as f:
@@ -526,13 +636,13 @@ class trajectory():
         particles = 0
         for line in lines:
             num = len(line.split())
-            if num == 2:
+            if num != col_parts:
                 frames += 1
             elif num == col_parts:
                 particles += 1
-                
+        
+        frames = int(frames/3)
         particles = int(particles/frames)
-        frames = int(frames)
         
         # number of lines of info for each frame
         T = particles + 3
@@ -547,7 +657,7 @@ class trajectory():
             
             # get cell
             newCellLine = lines[T*fr].split()
-            cell = np.array([float(newCellLine[0]), float(newCellLine[1]), float(newCellLine[2]), 90., 90., 90.])
+            cell = np.array([float(i) for i in newCellLine])
             
             # get time_stamp
             time_stamp_line = lines[T*fr+1].split()
@@ -567,16 +677,26 @@ class trajectory():
             
             # TODO: check column numbers instead and remove the list initializations above
             if orientation is not None:
-                orientation = data[:, 3:6]
+                if col_parts == 9:
+                    orientation = data[:,4:7]
+                elif col_parts >= 10:
+                    orientation = data[:,-3:]
+                else:
+                    orientation = data[:,3:6]
                 
             if bonding is not None:
-                bonding = data[:, 7].astype(int)
+                bonding = data[:, -1].astype(int)
                 
             if type is not None:
-                type = data[:, 6].astype(int)
+                type = data[:, -2].astype(int)
+
+            if col_parts >= 9:
+                box_num = data[:,3].astype(int)
+            else:
+                box_num = np.zeros(particles,dtype=int)
                 
             frame_obj = frame(particles, fr, xyz, cell,
-                          time_stamp, orientation, bonding, type)
+                          time_stamp, box_num, orientation, bonding, type)
             traj.append(frame_obj)
 
         self.list_of_frames = traj

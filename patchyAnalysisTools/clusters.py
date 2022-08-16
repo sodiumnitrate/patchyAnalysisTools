@@ -1,6 +1,6 @@
 import copy
-from select import select
 import networkx as nx
+import pdb
 
 '''
 
@@ -33,17 +33,22 @@ class cluster_info():
 
     def find_all_clusters(self):
         # function to find the list of all clusters
+
         list_of_particles_in_bonds = []
-        for (i, j) in self.bonds:
-            list_of_particles_in_bonds.append(i)
-            list_of_particles_in_bonds.append(j)
+        all_bonds = []
+        for k in range(len(self.bonds)):
+            for (i, j) in self.bonds[k]:
+                list_of_particles_in_bonds.append(i)
+                list_of_particles_in_bonds.append(j)
+                all_bonds.append((i,j))
 
         list_of_particles_in_bonds = list(set(list_of_particles_in_bonds))
+        all_bonds = list(set(all_bonds))
 
         clusters = []
         while len(list_of_particles_in_bonds) > 0:
             node = list_of_particles_in_bonds[0]
-            selected = select_cluster(node, self.bonds)
+            selected = select_cluster(node, all_bonds)
             selected = list(set(selected))
             clusters.append(selected)
             for p in selected:
@@ -57,9 +62,10 @@ class cluster_info():
         for cluster in self.clusters:
             bondlist = []
             for particle in cluster:
-                for bond in self.bonds:
-                    if particle in bond:
-                        bondlist.append(bond)
+                for k in range(len(self.bonds)):
+                    for bond in self.bonds[k]:
+                        if particle in bond:
+                            bondlist.append(bond)
 
             bondlist = list(set(bondlist))
             relevant_bonds.append(copy.copy(bondlist))

@@ -66,3 +66,6 @@ plt.show()
 
 # write the biggest cluster to file
 last_frame.write_biggest_cluster_xyz("biggest_cluster.xyz")
+
+print("energy: ", last_frame.energy[0])
+print("number of bonds: ", len(last_frame.bonds_calculated[0]))

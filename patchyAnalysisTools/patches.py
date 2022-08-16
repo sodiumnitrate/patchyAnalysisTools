@@ -12,6 +12,8 @@ class patches():
         self.patch_vectors = None
         self.types = None
 
+        self.adjacency = None
+
         self.read_patch_info(file_name)
 
     def read_patch_info(self, file_name):
@@ -19,8 +21,13 @@ class patches():
         line = f.readline()         # npatch diameter pm_switch (labels)
         line = f.readline().split() # npatch diameter pm_switch 
         n_patch = int(line[0])
+        pm_switch = int(line[-1])
         line = f.readline()         # ts  z[0]  z[1]  z[2]  (labels)
         line = f.readline()         # ts  z[0]  z[1]  z[2]  
+
+        adjacency = np.zeros((n_patch,n_patch))
+        if pm_switch == 0:
+            adjacency += 1
 
         eps_vals = []
         lambda_vals = []
@@ -38,9 +45,15 @@ class patches():
             line = f.readline().split()
             vector = [float(line[i]) for i in range(3)]
             patch_vectors.append(np.array(vector))
-            types.append(int(line[3]))
+            if len(line) >= 4:
+                types.append(int(line[3]))
+            else:
+                types = None
             labels = f.readline()
-            labels = f.readline()
+            interacts_with = int(f.readline().strip())
+            adjacency[i,interacts_with] = 1
+
+
 
         self.n_patch = n_patch
         self.eps_vals = eps_vals
@@ -48,3 +61,4 @@ class patches():
         self.cos_delta_vals = cos_delta_vals
         self.patch_vectors = patch_vectors
         self.types = types
+        self.adjacency = adjacency

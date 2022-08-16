@@ -89,7 +89,7 @@ def calculate_rg(xyz):
         rg += pos[0] ** 2 + pos[1] ** 2 + pos[2] ** 2
 
     rg /= N
-    return rg
+    return np.sqrt(rg)
 
 def nearest_image(d, cell):
     for i in range(3):
@@ -116,19 +116,6 @@ def make_molecule_whole(xyz,cell,relevant_bonds):
 
     return np.array(new_pos)
 
-
-def calculate_rg(xyz):
-    N,_ = xyz.shape
-    com = np.sum(xyz,axis=0)
-    com /= N
-    xyz -= com
-    
-    rg = 0.
-    for pos in xyz:
-        rg += pos[0] ** 2 + pos[1] ** 2 + pos[2] ** 2
-
-    rg /= N
-    return rg
 
 def autocorrelation(start,n_frames,A):
     '''
