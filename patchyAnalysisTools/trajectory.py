@@ -347,22 +347,26 @@ class frame():
             nxs = int(cell[0] / binsize) + 1
             nys = int(cell[1] / binsize) + 1
             nzs = int(cell[2] / binsize) + 1
+
+            binsize_x = cell[0] / nxs
+            binsize_y = cell[1] / nys
+            binsize_z = cell[2] / nzs
                 
             x_axis = np.zeros(nxs)
             y_axis = np.zeros(nys)
             z_axis = np.zeros(nzs)
             for i in range(nx):
-                bin_ind = int(i*grid_spacing_x/binsize)
+                bin_ind = int(i*grid_spacing_x/binsize_x)
                 if np.sum(xy_plane[i, :]) >= 1:
                     x_axis[bin_ind] += 1
                     
             for i in range(ny):
-                bin_ind = int(i*grid_spacing_y/binsize)
+                bin_ind = int(i*grid_spacing_y/binsize_y)
                 if np.sum(xy_plane[:, i]) >= 1:
                     y_axis[bin_ind] += 1
                     
             for i in range(nz):
-                bin_ind = int(i*grid_spacing_z/binsize)
+                bin_ind = int(i*grid_spacing_z/binsize_z)
                 if np.sum(yz_plane[:, i]) >= 1:
                     z_axis[bin_ind] += 1
                     
