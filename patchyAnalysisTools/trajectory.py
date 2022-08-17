@@ -119,7 +119,7 @@ class frame():
                     print(
                         "WARNING: number of bonditypeng info do not match the number of particles")
 
-    def get_list_of_interacting_pairs(self):
+    def get_list_of_interacting_pairs(self,tol=1e-6):
         # returns a list of bonds. Requires the patches object to be initialized.
         if self.patches is None:
             sys.exit("ERROR: need to set patch info via frame.set_patch_info(file_name)")
@@ -132,7 +132,7 @@ class frame():
         cell = self.cell
 
         # get the square of the maximum lambda value to use as a threshold distance
-        max_lambda_sq = (np.max(patch_obj.lambda_vals))**2
+        max_lambda_sq = (np.max(patch_obj.lambda_vals)+tol)**2
 
         # calculate energy
         if self.sim_type == 'GE':
@@ -204,7 +204,7 @@ class frame():
                                 assert(patch_obj.lambda_vals[pi] == patch_obj.lambda_vals[pj])
                                 d = np.sqrt(d2)
                                 # final check of distance
-                                if d <= patch_obj.lambda_vals[pi]:
+                                if d <= patch_obj.lambda_vals[pi]+tol:
                                     # the particles are interacting
                                     interacting = True
                                     energy[self.box_num[i]] += -0.5*(patch_obj.eps_vals[pi] + patch_obj.eps_vals[pj])
