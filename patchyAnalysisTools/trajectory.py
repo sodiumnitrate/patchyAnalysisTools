@@ -231,8 +231,8 @@ class frame():
         for i in range(self.n_particles):
             if bond_numbers[i] != self.bonding[i]:
                 correct = False
-                print("Particle i has %d bonds from calc, but traj file says %d" %
-                (bond_numbers[i], self.bonding[i]))
+                print("Particle %d has %d bonds from calc, but traj file says %d" %
+                (i, bond_numbers[i], self.bonding[i]))
 
         if not correct:
             sys.exit("There's a problem with the calculated bond numbers")

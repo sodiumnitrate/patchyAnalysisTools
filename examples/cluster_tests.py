@@ -58,3 +58,5 @@ for c in chains:
         sel_types.append(atom)
         selected.append(p)
 traj.write_xyz("longest_chains.xyz",selected=selected, sel_types=sel_types)
+
+pdb.set_trace()
