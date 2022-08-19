@@ -119,7 +119,7 @@ class frame():
                     print(
                         "WARNING: number of bonditypeng info do not match the number of particles")
 
-    def get_list_of_interacting_pairs(self,tol=1.74e-6):
+    def get_list_of_interacting_pairs(self,tol=1e-6):
         # returns a list of bonds. Requires the patches object to be initialized.
         if self.patches is None:
             sys.exit("ERROR: need to set patch info via frame.set_patch_info(file_name)")
@@ -197,7 +197,7 @@ class frame():
                             pj_cosdelta = patch_obj.cos_delta_vals[pj]
                             # check if the orientation is correct for interaction
                             correct_orientation = utils.check_reciprocal_interaction(
-                                angles_i, angles_j, pi_v, pj_v, pi_cosdelta, pj_cosdelta, dist)
+                                angles_i, angles_j, pi_v, pj_v, pi_cosdelta, pj_cosdelta, dist,tol=tol)
                             # if the orientation is correct
                             if correct_orientation:
                                 # make sure the interacting patches have the same lambda value

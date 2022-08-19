@@ -46,14 +46,14 @@ def rotate_vector(angles, vector):
 
     return R.dot(vector)
 
-def check_reciprocal_interaction(angles_i, angles_j, pi_v, pj_v, pi_cosdelta, pj_cosdelta, rji):
+def check_reciprocal_interaction(angles_i, angles_j, pi_v, pj_v, pi_cosdelta, pj_cosdelta, rji,tol=1e-6):
     pi_v = rotate_vector(angles_i, pi_v)
     pj_v = rotate_vector(angles_j, pj_v)
 
     omega_i = pi_v.dot(-rji)/np.linalg.norm(rji)
     omega_j = pj_v.dot(rji)/np.linalg.norm(rji)
 
-    if omega_i >= pi_cosdelta and omega_j >= pj_cosdelta:
+    if omega_i+tol >= pi_cosdelta and omega_j+tol >= pj_cosdelta:
         return True
     else:
         return False
