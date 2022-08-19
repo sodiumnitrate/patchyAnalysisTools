@@ -119,7 +119,7 @@ class frame():
                     print(
                         "WARNING: number of bonditypeng info do not match the number of particles")
 
-    def get_list_of_interacting_pairs(self,tol=1e-6):
+    def get_list_of_interacting_pairs(self,tol=1.74e-6):
         # returns a list of bonds. Requires the patches object to be initialized.
         if self.patches is None:
             sys.exit("ERROR: need to set patch info via frame.set_patch_info(file_name)")
