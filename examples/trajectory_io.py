@@ -47,6 +47,7 @@ else:
 
 # write frame to xyz file with cluster info
 last_frame.write_frame_with_cluster_info("last_frame_clusters.xyz")
+last_frame.write_frame_pdb("last_frame.pdb")
 
 # calculate rgs
 last_frame.get_cluster_rg()

@@ -455,6 +455,33 @@ class frame():
             f.write(" %lf %lf %lf\n" % (pos[0],pos[1],pos[2]))
         f.close()
 
+    def write_frame_pdb(self,file_name):
+        #TODO: make it suitable for GE output as well
+        #TODO: each cluster = one residue?
+        types = {0: 'N', 1: 'C', 2: 'O', 3: 'H', 4: 'S'}
+
+        f = open(file_name,'w')
+
+        # write cell info
+        cell = self.cell
+        cryst = "CRYST1{:9.3f}{:9.3f}{:9.3f}{:7.2f}{:7.2f}{:7.2f}"
+        cryst = cryst.format(cell[0],cell[1],cell[2],90,90,90)
+        cryst += "  P 21 21 21    8\n"
+        f.write(cryst)
+
+        # atom info   ind   name   resn  ch  resi    x     y      z      occ    bf
+        atom = "ATOM  {:5d} {:>4} {:>3} {:1}{:4d}    {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}"
+        atom += "      A1  {:2}  \n"
+
+        for i in range(self.n_particles):
+            x = self.coordinates[i,0]
+            y = self.coordinates[i,1]
+            z = self.coordinates[i,2]
+            el = types[self.type[i]]
+            f.write(atom.format(i,el,"VAL","A",1,x,y,z,1,0,el))
+
+        f.close()
+
 
 class trajectory():
     def __init__(self, file_name=None, list_of_frames=None):
@@ -509,6 +536,7 @@ class trajectory():
         types = {0: 'N', 1: 'C', 2: 'O', 3: 'H', 4: 'S'}
 
         different_types = self.list_of_frames[0].type is not None
+        max_type = np.amax(self.list_of_frames[0].type)
 
         if selected == None:
             selected = list(range(self.n_particles))
@@ -533,6 +561,11 @@ class trajectory():
             for i in selected:
                 if sel_types != None:
                     f.write(types[sel_types[ct]])
+                elif max_type > 4:
+                    if frame_obj.type[i] > max_type - 3:
+                        f.write('N')
+                    else:
+                        f.write('C')
                 elif different_types:
                     f.write(types[frame_obj.type[i]])
                 else:
