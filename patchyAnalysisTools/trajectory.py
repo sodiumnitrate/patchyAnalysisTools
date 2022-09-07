@@ -455,7 +455,17 @@ class frame():
             f.write(" %lf %lf %lf\n" % (pos[0],pos[1],pos[2]))
         f.close()
 
-    def write_frame_pdb(self,file_name):
+    def get_type_fractions(self):
+        types = list(set(self.type))
+        freq = {key:0 for key in types}
+        for t in self.type:
+            freq[t] += 1
+
+        for key in freq.keys():
+            freq[key] /= self.n_particles
+        return freq
+
+    def write_frame_pdb(self,file_name,write_bond_info=False):
         #TODO: make it suitable for GE output as well
         #TODO: each cluster = one residue?
         types = {0: 'N', 1: 'C', 2: 'O', 3: 'H', 4: 'S'}
@@ -481,6 +491,24 @@ class frame():
             f.write(atom.format(i,el,"VAL","A",1,x,y,z,1,0,el))
 
         f.close()
+
+        if write_bond_info:
+            bond_file = file_name.split('.pdb')[0] + '.tcl'
+            f = open(bond_file,'w')
+
+            # make sure that the list of interacting pairs exists
+            if self.bonds_calculated == None:
+                self.get_list_of_interacting_pairs()
+            
+            # load pdb file
+            #f.write("mol new " + file_name + '\n')
+            f.write("topo clearbonds\n")
+
+            for bond in self.bonds_calculated[0]:
+                f.write("topo addbond {} {}\n".format(bond[0],bond[1]))
+
+            f.close()
+
 
 
 class trajectory():

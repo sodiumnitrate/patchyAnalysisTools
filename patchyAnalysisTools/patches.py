@@ -1,6 +1,7 @@
 from . import trajectory
 from . import utils
 import numpy as np
+import pdb
 
 class patches():
     # this assumes all patches interact with every other patch
@@ -50,7 +51,8 @@ class patches():
             else:
                 types = None
             labels = f.readline()
-            interacts_with = int(f.readline().strip())
+            int_line = f.readline().strip()
+            interacts_with = int(int_line)
             adjacency[i,interacts_with] = 1
 
 
