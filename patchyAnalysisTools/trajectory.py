@@ -42,6 +42,11 @@ class frame():
         # check that the provided data types make sense
         self.check_data()
 
+    def write_xyz(self,file_name):
+        traj = trajectory(file_name=None, list_of_frames=[self])
+        traj.write_xyz(file_name)
+
+
     def set_cluster_info(self):
         # creates a cluster_info object and populates the necessary info
         if self.bonds_calculated is None:
@@ -509,6 +514,10 @@ class frame():
 
             f.close()
 
+    def coordination_number_from_bonds(self):
+        coordination_numbers = self.bonding
+
+        return np.histogram(coordination_numbers)
 
 
 class trajectory():
