@@ -514,10 +514,37 @@ class frame():
 
             f.close()
 
-    def coordination_number_from_bonds(self):
-        coordination_numbers = self.bonding
+    def coordination_number_from_dist(self,threshold=1.5):
+        n_particles = self.n_particles
+        n_types = np.unique(self.type).size
+        coordination_numbers = np.zeros((n_particles,n_types))
+        cell = self.cell
+        t2 = threshold ** 2
+        for i in range(n_particles):
+            neigs = np.zeros(n_types)
+            for j in range(n_particles):
+                if i == j:
+                    continue
 
-        return np.histogram(coordination_numbers)
+                t = self.type[j]
+                # TODO: add GE sim type support (skipping now for efficiency reasons)
+
+                pos_i = self.coordinates[i,:]
+                pos_j = self.coordinates[j,:]
+
+                dist = pos_i - pos_j
+
+                dist = utils.nearest_image(dist,cell)
+
+                d2 = dist[0]**2 + dist[1]**2 + dist[2]**2
+                if d2 <= t2:
+                    neigs[t] += 1
+
+            coordination_numbers[i,:] = neigs
+
+        return coordination_numbers
+
+
 
 
 class trajectory():
