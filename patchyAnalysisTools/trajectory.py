@@ -649,7 +649,7 @@ class trajectory():
         # set patch info
         self.patches = patches.patches(file_name)
 
-    def position_autocorrelation(self,start=None,dt=500,dx=1):
+    def position_autocorrelation(self,start=None,dt=5000,dx=1):
         # calculate autocorrelation function for positions
         if start is None:
             # if no start is provided, start from 1/3rd of the traj
