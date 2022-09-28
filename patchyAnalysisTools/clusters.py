@@ -29,13 +29,14 @@ class cluster_info():
 
         # populates the clusters attribute
         self.find_all_clusters()
-        print("all clusters found")
-        self.get_number_of_cycles() # sets N_loop
-        print("N_loop calculated")
-        self.get_chain_lengths()    # sets L_chain
-        print("L_chain calculated")
-        self.get_cluster_size()     # sets S_cluster
-        print("S_cluster calculated")
+        #self.get_number_of_cycles() # sets N_loop
+        #self.get_chain_lengths()    # sets L_chain
+        #self.get_cluster_size()     # sets S_cluster
+
+    def get_cluster_props(self):
+        self.get_number_of_cycles()
+        self.get_chain_lengths()
+        self.get_cluster_size()
 
     def find_all_clusters(self):
         # function to find the list of all clusters
