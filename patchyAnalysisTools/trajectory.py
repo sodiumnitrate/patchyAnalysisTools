@@ -559,6 +559,7 @@ class trajectory():
         self.n_particles = self.list_of_frames[0].n_particles
 
         self.patches = None
+        self.energy = None
         
         self.sim_type = self.list_of_frames[0].sim_type
 
@@ -648,6 +649,34 @@ class trajectory():
     def set_patch_info(self,file_name):
         # set patch info
         self.patches = patches.patches(file_name)
+
+    def set_energy(self):
+        energies = []
+        for i, frame in enumerate(self.list_of_frames):
+            assert(frame.bonding is not None)
+            energy = np.sum(frame.bonding) * -0.5
+            energies.append(energy)
+
+        energies = np.array(energies)
+
+        self.energy = energies
+
+    def get_energy(self):
+        if self.energy is None:
+            self.set_energy()
+
+        return self.energy
+
+    def get_en_autocorr(self,start=None,dt=5000):
+        if start is None:
+            start = self.n_frames // 3
+
+        if self.energy is None:
+            self.set_energy()
+
+        autocorr = utils.autocorrelation(start,self.n_frames,self.energy)
+        times = np.arange(0,autocorr.size,1)*dt
+        return times, autocorr
 
     def position_autocorrelation(self,start=None,dt=5000,dx=1):
         # calculate autocorrelation function for positions
