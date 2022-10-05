@@ -276,7 +276,6 @@ class frame():
                 # case 2: type1 != type2
                 ind1 = np.where(self.type == type1)[0]
                 ind2 = np.where(self.type == type2)[0]
-                print(xyz[ind1[0],:])
                 r, gr = rdf_sq.calculate_rdf(xyz,n_particles,cell[0],selection=(ind1,ind2))
 
         return r,gr
