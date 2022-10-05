@@ -245,7 +245,7 @@ class frame():
             print("Bond counts match!")
         
     
-    def calculate_rdf(self,binsize=0.1,box=0):
+    def calculate_rdf(self,binsize=0.1,box=0,selection=(None,None)):
         # calculate the radial distribution function
         if self.sim_type == 'GE':
             L = self.cell[2*box]
@@ -260,7 +260,25 @@ class frame():
 
         # make sure we have a cubic box
         np.testing.assert_allclose(cell[:3],cell[0],rtol=1e-5)
-        r,gr = rdf_sq.calculate_rdf(xyz,n_particles,cell[0],binsize=binsize)
+        if selection[0] is None or selection[1] is None:
+            r,gr = rdf_sq.calculate_rdf(xyz,n_particles,cell[0],binsize=binsize)
+        else:
+            type1 = selection[0]
+            type2 = selection[1]
+            assert(type1 is not None and type2 is not None)
+            # case 1: type1 == type2
+            if type1 == type2:
+                ind = np.where(self.type == type1)
+                N = ind[0].size
+                xyz_sel = xyz[ind,:][0]
+                r, gr = rdf_sq.calculate_rdf(xyz_sel,N,cell[0],binsize=binsize)
+            else:
+                # case 2: type1 != type2
+                ind1 = np.where(self.type == type1)[0]
+                ind2 = np.where(self.type == type2)[0]
+                print(xyz[ind1[0],:])
+                r, gr = rdf_sq.calculate_rdf(xyz,n_particles,cell[0],selection=(ind1,ind2))
+
         return r,gr
 
     def calculate_sq(self,g=30,box=0):
