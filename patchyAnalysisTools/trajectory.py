@@ -1,4 +1,5 @@
 from distutils.dep_util import newer_pairwise
+from lib2to3.pgen2.pgen import generate_grammar
 from re import S
 import numpy as np
 import sys
@@ -319,6 +320,48 @@ class frame():
             
         return curr_bonds/max_bonds
 
+    def get_cluster_densities(self,grid_spacing=0.05,radius=1.5,box=0):
+        # TODO: refactor so that you don't have to do this again in find_percolating_clusters
+        if self.sim_type == 'GE':
+            L = self.cell[2*box]
+            cell = np.array([L,L,L])
+        else:
+            cell = self.cell
+
+        nx = int(np.round(cell[0] / grid_spacing))
+        ny = int(np.round(cell[1] / grid_spacing))
+        nz = int(np.round(cell[2] / grid_spacing))
+
+        grid_spacing_x = cell[0] / nx
+        grid_spacing_y = cell[1] / ny
+        grid_spacing_z = cell[2] / nz
+
+        valid_triples = utils.generate_valid_triples(radius,grid_spacing_x)
+
+        triples_sigma = utils.generate_valid_triples(1,grid_spacing_x)
+        n_triples_sigma = len(triples_sigma) # "volume" of one particle
+
+        cluster_densities = []
+        for ci, cluster in enumerate(self.cluster_info.clusters):
+            grid = np.zeros((nx,ny,nz))
+            for p in cluster:
+                x, y, z = self.coordinates[p,0], self.coordinates[p,1], self.coordinates[p,2]
+                sx,sy,sz = int(np.round(x / grid_spacing_x)), int(np.round(y / grid_spacing_y)), int(np.round(z / grid_spacing_z))
+
+                for triple in valid_triples:
+                    ixx = (sx + triple[0]) % nx
+                    iyy = (sy + triple[1]) % ny
+                    izz = (sz + triple[2]) % nz
+                    
+                    grid[ixx, iyy, izz] = 1 
+            
+            sum_points = np.sum(grid)
+            density = len(cluster) * n_triples_sigma / sum_points
+            cluster_densities.append(density)
+
+        self.cluster_info.cluster_densities = cluster_densities
+
+
     def find_percolating_clusters(self,max_lambda=1.1,box=0):
         # find out which clusters percolate
         if self.sim_type == 'GE':
@@ -339,14 +382,7 @@ class frame():
         grid_spacing_y = cell[1] / ny
         grid_spacing_z = cell[2] / nz
         
-        rad = int(np.round((max_lambda/2)/grid_spacing_x))
-        
-        valid_triples = []
-        for ix in range(-rad, rad):
-            for iy in range(-rad, rad):
-                for iz in range(-rad, rad):
-                    if ix**2 + iy**2 + iz**2 <= rad**2:
-                        valid_triples.append((ix, iy, iz))
+        valid_triples = utils.generate_valid_triples(max_lambda,grid_spacing_x)
                         
         for ci,cluster in enumerate(clusters):
             grid = np.zeros((nx, ny, nz))

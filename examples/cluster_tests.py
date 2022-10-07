@@ -1,4 +1,5 @@
 import patchyAnalysisTools.trajectory as trj
+import matplotlib.pyplot as plt
 import pdb
 
 # load trajectory
@@ -23,6 +24,8 @@ if last_frame.percolated:
     print("system is percolated!")
 else:
     print("system is not percolated!")
+
+last_frame.cluster_info.get_cluster_props()
 
 # write frame to xyz file with cluster info
 last_frame.write_frame_with_cluster_info("last_frame_clusters_clust.xyz")
@@ -59,4 +62,7 @@ for c in chains:
         selected.append(p)
 traj.write_xyz("longest_chains.xyz",selected=selected, sel_types=sel_types)
 
-pdb.set_trace()
+# get densities of clusters in the last frame
+last_frame.get_cluster_densities()
+plt.hist(last_frame.cluster_info.cluster_densities)
+plt.show()

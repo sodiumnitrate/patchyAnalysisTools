@@ -205,3 +205,13 @@ def get_frame_slice(frame_object, grid_spacing=0.02, rad=25, start=0, end=2):
     slice[slice > 1] = 1
 
     return slice
+
+def generate_valid_triples(rad,grid_spacing):
+    radius = int(np.round((rad/2)/grid_spacing))
+    valid_triples = []
+    for ix in range(-radius,radius):
+        for iy in range(-radius,radius):
+            for iz in range(-radius,radius):
+                if ix**2 + iy**2 + iz**2 <= radius**2:
+                    valid_triples.append((ix,iy,iz))
+    return valid_triples

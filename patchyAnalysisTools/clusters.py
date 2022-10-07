@@ -27,6 +27,8 @@ class cluster_info():
 
         self.percolated_clusters = None
 
+        self.cluster_densities = None
+
         # populates the clusters attribute
         self.find_all_clusters()
         #self.get_number_of_cycles() # sets N_loop
@@ -130,7 +132,6 @@ class cluster_info():
 
         self.L_chain = L_chain
         self.chains = chain
-
 
 def select_cluster(node, bonds):
     # function to select clusters, given a list of bonds and a node
