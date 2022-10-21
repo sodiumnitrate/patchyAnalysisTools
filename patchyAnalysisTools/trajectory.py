@@ -728,8 +728,11 @@ class trajectory():
             self.set_energy()
 
         autocorr = utils.autocorrelation(start,self.n_frames,self.energy)
-        times = np.arange(0,autocorr.size,1)*dt
-        return times, autocorr
+        if autocorr is None:
+            return None, None
+        else:
+            times = np.arange(0,autocorr.size,1)*dt
+            return times, autocorr
 
     def position_autocorrelation(self,start=None,dt=5000,dx=1):
         # calculate autocorrelation function for positions

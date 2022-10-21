@@ -145,8 +145,10 @@ def autocorrelation(start,n_frames,A):
             integrand /= count * f
             autocorr[f] = integrand
 
-    assert(autocorr[1] != 0)
-    return autocorr[1:] / autocorr[1]
+    if autocorr[1] == 0:
+        return None
+    else:
+        return autocorr[1:] / autocorr[1]
 
 
 def get_frame_slice(frame_object, grid_spacing=0.02, rad=25, start=0, end=2):
