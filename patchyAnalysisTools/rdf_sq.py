@@ -60,8 +60,6 @@ def calculate_sq(n_particles, points, L, g=30):
     # get bin size
     binsize = 2*np.pi/L
 
-    if binsize*0.5 > 0.1:
-        binsize = 0.05
     # max k vector
     kmax = binsize * np.sqrt(3) * g
     # number of kbins
