@@ -4,6 +4,11 @@
 #include "pybind11/numpy.h"
 #include <iostream>
 
+/*
+The sq function calculates the 1d structure factor, given particle coordinates and box size.
+See rdf_sq.py to see the python wrapper.
+*/
+
 namespace py = pybind11;
 
 py::array_t<double> sq(const int g, double L, py::array_t<double, py::array::c_style | py::array::forcecast> points, int numpoints)

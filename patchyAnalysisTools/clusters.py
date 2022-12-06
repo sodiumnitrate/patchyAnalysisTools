@@ -1,32 +1,43 @@
+'''
+This files defines a cluster_info class to hold cluster-related info for a given frame.
+(This is then used as an attribute for the frame class).
+'''
+
 import copy
 import networkx as nx
 import pdb
 import numpy as np
 
-'''
-
-This files defines a cluster_info class to hold cluster-related info for a given frame.
-(This is then used as an attribute for the frame class)
-
-'''
-
 class cluster_info():
     # initialize. List of bonds need to be already calculated (see the frame class).
     def __init__(self,bonds):
+        # list of clusters
         self.clusters = None
+        # list of bonds
         self.bonds = bonds
 
+        # a list that holds the bonds relevant to each cluster
         self.relevant_bonds = None
 
+        # a list that holds the number of loops for each cluster
         self.N_loop = None
+        # list of loops in each cluster
         self.loops = None
+        # list of chain lengths
         self.L_chain = None
+        # list of chains in each cluster
         self.chains = None
+        # list of radius of gyration for each cluster
         self.R_g = None
+        # list of cluster sizes
         self.S_cluster = None
 
+        # a list of 1s and 0s to denote which clusters are percolated
+        # (populated by frame.find_percolating_clusters()) 
         self.percolated_clusters = None
 
+        # a list to hold the "density" of each cluster
+        # (NOTE: ultimately, not an interesting metric, but keeping for completeness)
         self.cluster_densities = None
 
         # populates the clusters attribute
@@ -36,6 +47,7 @@ class cluster_info():
         #self.get_cluster_size()     # sets S_cluster
 
     def get_cluster_props(self):
+        # calculate various cluster properties
         self.get_number_of_cycles()
         self.get_chain_lengths()
         self.get_cluster_size()
@@ -67,6 +79,7 @@ class cluster_info():
 
     def get_relevant_bonds(self):
         # finds a list of bonds for each cluster
+
         relevant_bonds = []
         for cluster in self.clusters:
             bondlist = []
@@ -82,7 +95,8 @@ class cluster_info():
         self.relevant_bonds = relevant_bonds
 
     def get_cluster_size(self):
-        # function to populate S_cluster
+        # function to populate S_cluster (size of clusters)
+
         S_cluster = []
         for cluster in self.clusters:
             S_cluster.append(len(cluster))
@@ -91,6 +105,7 @@ class cluster_info():
 
     def get_number_of_cycles(self):
         # finds the number of (basis) cycles in each cluster
+        # NOTE: this becomes *very* slow and memory intensive for percolated systems with N>4000
         if self.relevant_bonds is None:
             self.get_relevant_bonds()
         N_loop = []
@@ -142,7 +157,7 @@ def select_cluster(node, bonds):
         curr = Q[0]
         Q = Q[1:]
         selected.append(curr)
-        # TODO: use nx.adj here instead for a possible performance improvement
+        # TODO: maybe use nx.adj here instead for a possible performance improvement
         for (i, j) in bonds:
             if curr == i and j not in selected:
                 Q.append(j)

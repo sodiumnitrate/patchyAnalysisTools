@@ -4,6 +4,14 @@
 #include "pybind11/numpy.h"
 #include <iostream>
 
+/*
+This file contains two functions to allow for calculating radial distribution functions.
+The first one (RDF_virtualcopies) doesn't distinguish particle types.
+The second one (RDF_virtualcopies_diff_grps) takes additional input to calculate g_xy, where x
+and y are different types of particles.
+See rdf_sq.py to see the python wrapper.
+*/
+
 namespace py = pybind11;
 
 py::array_t<double> RDF_virtualcopies(

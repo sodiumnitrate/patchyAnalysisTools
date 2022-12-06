@@ -1,3 +1,11 @@
+"""
+This file holds the frame and trajectory classes.
+A trajectory is basically a list of frames, with a few more attributes to keep track of time, etc.
+Each frame holds the particle information that allows for further analysis.
+"""
+
+# TODO: (organizational) separate the frame and trajectory classes into their own .py files
+
 from distutils.dep_util import newer_pairwise
 from lib2to3.pgen2.pgen import generate_grammar
 from re import S
@@ -19,21 +27,32 @@ class frame():
     
     '''
     def __init__(self, n_particles, n_frame, coordinates, cell, time_stamp, box_num=None, orientation=None, bonding=None, type=None):
+        # number of particles
         self.n_particles = n_particles
+        # frame number
         self.n_frame = n_frame
+        # particle coordinates
         self.coordinates = coordinates
+        # particle orientations
         self.orientation = orientation
+        # number of bonds each particle participates in
         self.bonding = bonding
+        # particle types
         self.type = type
+        # cell size
         self.cell = cell
+        # timestamp of the frame
         self.time_stamp = time_stamp
 
+        # number of boxes (relevant only for the output of Gibbs Ensemble simulations)
         self.box_num = box_num
 
+        # type of simulation (if == GE, Gibbs Ensemble)
         self.sim_type = None
 
         # the following are optional and can be set using methods below
         self.patches = None
+        # 
         self.cluster_info = None
         self.bonds_calculated = None
         self.percolated = None
@@ -322,6 +341,7 @@ class frame():
 
     def get_cluster_densities(self,grid_spacing=0.05,radius=1.5,box=0):
         # TODO: refactor so that you don't have to do this again in find_percolating_clusters
+        # (NOTE: ultimately, not an interesting metric, but keeping for completeness)
         if self.sim_type == 'GE':
             L = self.cell[2*box]
             cell = np.array([L,L,L])

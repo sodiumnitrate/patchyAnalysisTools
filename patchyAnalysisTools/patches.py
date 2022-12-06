@@ -1,23 +1,40 @@
+"""
+This file contains the patches class, which holds patch information and 
+can be read from a patch file that was used for a simulation.
+This information is necessary for determining bonding information and clusters.
+"""
+
 from . import trajectory
 from . import utils
 import numpy as np
-import pdb
 
 class patches():
-    # this assumes all patches interact with every other patch
+    # TODO: is this still true?
+    # IMPORTANT: assumes all patches interact with every other patch
+    # (Kern-Frenkel model)
     def __init__(self, file_name):
+        # number of patches
         self.n_patch = None
+        # list that holds epsilon values (interaction strength)
         self.eps_vals = None
+        # list that holds the lambda values (interaction range)
         self.lambda_vals = None
+        # list that holds the cosine of patch angular widths 
         self.cos_delta_vals = None
+        # list that holds patch vectors
         self.patch_vectors = None
+        # which particle types the patch will be active on
         self.types = None
 
+        # adjacency matrix that keeps track of which patch types will
+        # interact with the other patch types
         self.adjacency = None
 
+        # read patch info from file
         self.read_patch_info(file_name)
 
     def read_patch_info(self, file_name):
+        # function to read patch info from file
         f = open(file_name, 'r')
         line = f.readline()         # npatch diameter pm_switch (labels)
         line = f.readline().split() # npatch diameter pm_switch 

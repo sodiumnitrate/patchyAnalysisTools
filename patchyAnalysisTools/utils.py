@@ -1,13 +1,15 @@
-
+"""
+This file holds a bunch of independent utility functions.
+"""
 from . import trajectory
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import random
-import pdb
 import networkx as nx
 
 def get_cluster_rg(frame_obj,clusters):
+    # calculate the radius of gyration of clusters
     cell = frame_obj.cell
     rgs = []
     for cluster in clusters:
@@ -27,6 +29,9 @@ def get_cluster_rg(frame_obj,clusters):
     return rgs
 
 def rotate_vector(angles, vector):
+    # rotate a vector given Euler angles
+    # ZXZ counterclockwise (?)
+    # (note that this mirrors the rotation scheme in the simulation code)
     phi = angles[0]
     theta = angles[1]
     psi = angles[2]
@@ -48,6 +53,7 @@ def rotate_vector(angles, vector):
     return R.dot(vector)
 
 def check_reciprocal_interaction(angles_i, angles_j, pi_v, pj_v, pi_cosdelta, pj_cosdelta, rji,tol=1e-6):
+    # function to check the (angular) reciprocal interaction of two given particles
     pi_v = rotate_vector(angles_i, pi_v)
     pj_v = rotate_vector(angles_j, pj_v)
 
@@ -61,6 +67,10 @@ def check_reciprocal_interaction(angles_i, angles_j, pi_v, pj_v, pi_cosdelta, pj
 
 
 def plot_clusters(frame):
+    # function to plot clusters in 3d, using matplotlib
+    # NOTE: very resource intensive. Use the print .xyz methods and use 
+    # a visulization program like VMD or OVITO instead.
+
     assert(frame.cluster_info is not None)
     clusters = frame.cluster_info.clusters
 
@@ -80,6 +90,7 @@ def plot_clusters(frame):
 
 
 def calculate_rg(xyz):
+    # calculate the radius of gyration of the given coordinates
     N,d = xyz.shape
     com = np.sum(xyz,axis=0)
     com /= N
@@ -93,6 +104,7 @@ def calculate_rg(xyz):
     return np.sqrt(rg)
 
 def nearest_image(d, cell):
+    # apply periodic boundary conditions
     for i in range(3):
         hbox = cell[i] / 2
 
@@ -105,6 +117,8 @@ def nearest_image(d, cell):
     return d
 
 def make_molecule_whole(xyz,cell,relevant_bonds):
+    # unfragment a cluster that has been broken up due to periodic boundary conditions
+
     G = nx.Graph()
     G.add_edges_from(relevant_bonds)
     pos = dict(enumerate(xyz))
@@ -152,6 +166,9 @@ def autocorrelation(start,n_frames,A):
 
 
 def get_frame_slice(frame_object, grid_spacing=0.02, rad=25, start=0, end=2):
+    # function to select a chosen slab of the particles
+    # (for visualization purposes)
+
     cell = frame_object.cell
 
     if start < 0 or start > cell[0] or end < 0 or end > cell[0]:
@@ -209,6 +226,7 @@ def get_frame_slice(frame_object, grid_spacing=0.02, rad=25, start=0, end=2):
     return slice
 
 def generate_valid_triples(rad,grid_spacing):
+    # select grid points within +/- radius (of a chosen point)
     radius = int(np.round((rad/2)/grid_spacing))
     valid_triples = []
     for ix in range(-radius,radius):

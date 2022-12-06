@@ -1,3 +1,8 @@
+"""
+This file contains wrapper functions to the radial distribution function and
+structure factor functions written in C++ (see /src).
+"""
+
 import numpy as np
 from . import utils
 from . import trajectory
