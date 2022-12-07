@@ -12,6 +12,14 @@ A set of tools to analyze the output of patchy particle simulations. Works with 
 
 (See the `examples` folder for more details.)
 
+### Loading the module
+
+You can load the module as 
+
+	import patchyAnalysisTools.trajectory as trj
+
+The following examples all use the alias `trj` for the module.
+
 ### Loading trajectories
 
 To load a trajectory:
