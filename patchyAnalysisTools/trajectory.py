@@ -499,6 +499,8 @@ class frame():
     def get_cluster_rg(self):
         # calculate the R_g of clusters
         # (may want to exclude percolating ones when calculating stats)
+        if self.cluster_info.relevant_bonds is None:
+            self.cluster_info.get_relevant_bonds()
         cell = self.cell
         rgs = []
         for i,cluster in enumerate(self.cluster_info.clusters):

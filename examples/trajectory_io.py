@@ -1,3 +1,7 @@
+"""
+This file shows how some of the features of the module are used.
+"""
+
 import matplotlib.pyplot as plt
 import pdb
 import patchyAnalysisTools.trajectory as trj
@@ -56,6 +60,7 @@ plt.title("histogram of cluster R_g")
 plt.show()
 
 # get number of loops
+last_frame.cluster_info.get_cluster_props()
 plt.hist(last_frame.cluster_info.N_loop)
 plt.title("histogram of cluster N_loops")
 plt.show()
