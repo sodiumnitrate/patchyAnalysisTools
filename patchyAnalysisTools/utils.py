@@ -235,3 +235,43 @@ def generate_valid_triples(rad,grid_spacing):
                 if ix**2 + iy**2 + iz**2 <= radius**2:
                     valid_triples.append((ix,iy,iz))
     return valid_triples
+
+def stitch_snapshots(list_of_file_names):
+    #TODO: add functionality to pick random snaps with replacement to generate bigger systems
+
+    # we will construct an n by n by n box, so the number of snapshots need
+    # to be a cubic number. Throw away the extras.
+    n = int((len(list_of_file_names))**(1./3))
+    N_snaps = n * n * n
+    for i,file_name in enumerate(list_of_file_names[:N_snaps]):
+        traj = trajectory.trajectory(file_name=file_name)
+        frame = traj.get_last_frame()
+
+        if i == 0:
+            coordinates = frame.coordinates
+            orientations = frame.orientation
+            type = frame.type
+            bonding = frame.bonding
+            cell_curr = frame.cell
+            n_particles = frame.n_particles
+        else:
+            assert(cell_curr[0] == frame.cell[0])
+
+            # figure out translation
+            n1 = i // (n*n)
+            n2 = (i-n1*n*n) // n
+            n3 = (i-n1*n*n) % n
+            print(i,n1,n2,n3)
+            translation = np.array([cell_curr[0] * n1, cell_curr[1] * n2, cell_curr[2] * n3])
+
+            n_particles += frame.n_particles
+            coordinates = np.concatenate((coordinates,frame.coordinates+translation),axis=0)
+            orientations = np.concatenate((orientations,frame.orientation),axis=0)
+            type = np.concatenate((type, frame.type), axis=0)
+            bonding = np.concatenate((bonding, frame.bonding), axis=0)
+
+    cell = [0,0,0]
+    cell[0], cell[1], cell[2] = cell_curr[0] * n, cell_curr[1] * n, cell_curr[2] * n
+    
+    new_frame = trajectory.frame(n_particles,0,coordinates,np.array(cell),0,orientation=orientations,bonding=bonding,type=type)
+    return new_frame

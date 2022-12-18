@@ -6,12 +6,8 @@ Each frame holds the particle information that allows for further analysis.
 
 # TODO: (organizational) separate the frame and trajectory classes into their own .py files
 
-from distutils.dep_util import newer_pairwise
-from lib2to3.pgen2.pgen import generate_grammar
-from re import S
 import numpy as np
 import sys
-import pdb
 import matplotlib.pyplot as plt
 import random
 import networkx as nx
