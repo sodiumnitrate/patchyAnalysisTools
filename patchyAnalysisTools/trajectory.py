@@ -546,6 +546,8 @@ class frame():
         #TODO: each cluster = one residue?
         types = {0: 'N', 1: 'C', 2: 'O', 3: 'H', 4: 'S'}
 
+        max_type = np.amax(self.type)
+
         f = open(file_name,'w')
 
         # write cell info
@@ -563,7 +565,13 @@ class frame():
             x = self.coordinates[i,0]
             y = self.coordinates[i,1]
             z = self.coordinates[i,2]
-            el = types[self.type[i]]
+            if max_type > 4:
+                if self.type[i] > max_type - 3:
+                    el = 'N'
+                else:
+                    el = 'C'
+            else:
+                el = types[self.type[i]]
             f.write(atom.format(i,el,"VAL","A",1,x,y,z,1,0,el))
 
         f.close()
