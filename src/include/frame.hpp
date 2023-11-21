@@ -44,15 +44,15 @@ public:
     void set_patch_info(Patches patches_);
     void set_patch_info(std::string file_name);
 
-    std::vector<std::vector<int> > get_list_of_interacting_pairs(double tol=1e-6);
+    std::vector<std::vector<int> > get_list_of_interacting_pairs(double = 1e-6);
     bool check_calculated_bonds_against_bond_numbers();
     //std::vector<std::vector<double> > calculate_rdf(double binsize=0.1); // TODO: allow for selections
     //std::vector<std::vector<double> > calculate_sq(double g=30);
-    double get_bond_probability();
-    void find_percolating_clusters(double r_cut=1.1);
-    bool is_system_percolated(double r_cut=1.1);
+    //double get_bond_probability();
+    //void find_percolating_clusters(double = 1.1);
+    //bool is_system_percolated(double = 1.1);
 
-    bool does_i_j_interact(int i, int j, double tol=1e-6);
+    bool does_i_j_interact(int i, int j, double = 1e-6);
 
     Vec3 get_i_j_displacement(int i, int j);
 

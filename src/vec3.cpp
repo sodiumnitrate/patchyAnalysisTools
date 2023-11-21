@@ -39,7 +39,7 @@ void Vec3::set_vec(std::vector<double> vec){
 // dot product
 double Vec3::dot(Vec3 another_vec){
     std::vector<double> other = another_vec.get_vec();
-    double res = other[0] * x + other[1] * y + other[2] * z;
+    return other[0] * x + other[1] * y + other[2] * z;
 }
 
 void Vec3::rotate(Rotation& rot){
@@ -50,27 +50,13 @@ void Vec3::rotate(Rotation& rot){
 }
 
 void Vec3::rotate(double angles[3]){
-    Rotation rot(angles);
+    Rotation rot(angles[0], angles[1], angles[2]);
     std::vector<double> vec = this->get_vec();
     std::vector<double> res = rot.rotate_vec(vec);
     this->set_vec(res);
 }
 
-void Vec3::rotate(double q[4]){
-    Rotation rot(q);
-    std::vector<double> vec = this->get_vec();
-    std::vector<double> res = rot.rotate_vec(vec);
-    this->set_vec(res);
-}
-
-void Vec3::rotate(double R[3][3]){
-    Rotation rot(R);
-    std::vector<double> vec = this->get_vec();
-    std::vector<double> res = rot.rotate_vec(vec);
-    this->set_vec(res);
-}
-
-bool Vec3::is_normal(double tol=1e-6){
+bool Vec3::is_normal(double tol){
     double norm_sq = x * x + y * y + z * z;
     return std::abs(norm_sq - 1) >= tol;
 }

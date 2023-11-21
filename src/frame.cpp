@@ -1,4 +1,9 @@
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include "include/frame.hpp"
+
+namespace py = pybind11;
 
 // constructors
 Frame::Frame(std::vector<Vec3> coordinates_, std::vector<Rotation> orientations_){
@@ -18,12 +23,8 @@ Frame::Frame(std::vector<std::vector<double> > coords, std::vector<std::vector<d
         Vec3 curr(t);
         coordinates.push_back(curr);
     }
-    double angles[3];
     for(auto t : orients){
-        angles[0] = t[0];
-        angles[1] = t[1];
-        angles[2] = t[2];
-        Rotation rot(angles);
+        Rotation rot(t[1], t[2], t[3]);
         orientations.push_back(rot);
     }
 
@@ -66,14 +67,10 @@ void Frame::set_orientations(std::vector<Rotation> orient){
 }
 void Frame::set_orientations(std::vector<Vec3> orient){
     if(coordinates.size() > 0 && coordinates.size() != orient.size()) throw "orientations size is different from coordinates";
-    double angles[3];
     std::vector<double> avec;
     for(auto t : orient){
         avec = t.get_vec();
-        angles[0] = avec[0];
-        angles[1] = avec[1];
-        angles[2] = avec[2];
-        Rotation curr(angles);
+        Rotation curr(avec[0], avec[2], avec[3]);
         orientations.push_back(curr);
     }
 }
@@ -108,7 +105,7 @@ void Frame::set_patch_info(std::string file_name){
     patches.read_from_file(file_name);
 }
 
-bool Frame::does_i_j_interact(int i, int j, double tol=1e-6){
+bool Frame::does_i_j_interact(int i, int j, double tol){
     // check dist
     double max_lambda = this->patches.get_max_lambda();
     Vec3 disp = this->get_i_j_displacement(i, j);
@@ -143,7 +140,7 @@ Vec3 Frame::get_i_j_displacement(int i, int j){
     return disp;
 }
 
-std::vector<std::vector<int> > Frame::get_list_of_interacting_pairs(double tol=1e-6){
+std::vector<std::vector<int> > Frame::get_list_of_interacting_pairs(double tol){
     if(patches.get_n_patch() == 0) throw "no patches to calculate energy with.";
 
     bonds_calculated.clear();
@@ -177,5 +174,13 @@ bool Frame::check_calculated_bonds_against_bond_numbers(){
 
 void Frame::set_cluster_info(){
     std::vector<std::vector<int> > interacting_pairs = this->get_list_of_interacting_pairs();
-    
+    cluster_info.set_bonds(interacting_pairs);
+    cluster_info.clusters_from_interacting_pairs(N);
+
+}
+
+void init_frame(py::module_ &m){
+    py::class_<Frame>(m, "Frame", py::dynamic_attr())
+        .def(py::init<std::vector<std::vector<double> >, std::vector<std::vector<double> > >())
+        ;
 }

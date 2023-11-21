@@ -20,10 +20,8 @@ public:
 
     void rotate(Rotation& rot);
     void rotate(double angles[3]);
-    void rotate(double R[3][3]);
-    void rotate(double q[4]);
 
-    bool is_normal(double tol=1e-6);
+    bool is_normal(double = 1e-6);
     void normalize();
 
     Vec3 diff(Vec3 another);

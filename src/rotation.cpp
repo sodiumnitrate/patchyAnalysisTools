@@ -72,11 +72,11 @@ void Rotation::quaternion_to_rotation_matrix(){
 }
 
 // constructors
-Rotation::Rotation(double angles[3]){
-    // form rotation matrix, and quaternion, given 3 Euler angles in ZXZ CCW
-    double phi = angles[0];
-    double theta = angles[1];
-    double psi = angles[2];
+Rotation::Rotation(double phi, double theta, double psi){
+    // form rotation matrix, and quaternion, given 3 Euler angles in ZXZ CCW'
+    zxz_ccw_angles[0] = phi;
+    zxz_ccw_angles[1] = theta;
+    zxz_ccw_angles[2] = psi;
 
     rotation_matrix[0][0] = std::cos(phi) * std::cos(psi) - std::cos(theta) * std::sin(phi) * std::sin(psi);
     rotation_matrix[0][1] = -1*std::sin(phi) * std::cos(theta) * std::cos(psi) - std::cos(phi) * std::cos(psi);
@@ -91,24 +91,14 @@ Rotation::Rotation(double angles[3]){
     this->rotation_matrix_to_quaternion();
 }
 
-Rotation::Rotation(double quat[4]){
-    for(int i = 0; i<4; i++) quaternion[i] = quat[i];
+Rotation::Rotation(double q0, double q1, double q2, double q3){
+    quaternion[0] = q0;
+    quaternion[1] = q1;
+    quaternion[2] = q2;
+    quaternion[3] = q3;
 
     this->quaternion_to_rotation_matrix();
     this->rotation_matrix_to_angles();
-}
-
-Rotation::Rotation(double rot_matrix[3][3]){
-    for(int i = 0; i < 3; i++){
-        for(int j = 0; j < 3; j++){
-            rotation_matrix[i][j] = rot_matrix[i][j];
-        }
-    }
-
-    // TODO: checks
-
-    this->rotation_matrix_to_angles();
-    this->rotation_matrix_to_quaternion();
 }
 
 std::vector<double> Rotation::rotate_vec(std::vector<double> vec){
@@ -124,17 +114,6 @@ std::vector<double> Rotation::rotate_vec(std::vector<double> vec){
     return res;
 }
 
-// copy construtor
-Rotation::Rotation(Rotation &t){
-    for(int i=0; i<3; i++){
-        zxz_ccw_angles[i] = t.zxz_ccw_angles[i];
-        for(int j=0; j<3; j++){
-            rotation_matrix[i][j] = t.rotation_matrix[i][j];
-        }
-        quaternion[i] = t.quaternion[i];
-    }
-    quaternion[3] = t.quaternion[3];
-}
 
 // access private props
 std::vector<double> Rotation::get_zxz_ccw_angles(){
