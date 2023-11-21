@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <iostream>
 #include "vec3.hpp"
 #include "patches.hpp"
 #include "clusters.hpp"
@@ -24,15 +25,19 @@ class Frame{
     Clusters cluster_info;
 
 public:
-    Frame(std::vector<Vec3> coordinates_, std::vector<Rotation> orientations_);
-    Frame(std::vector<std::vector<double> > coords, std::vector<std::vector<double> > orients);
+    Frame(std::vector<Vec3> coordinates_, std::vector<Rotation> orientations_, Vec3 cell_);
+    Frame(std::vector<std::vector<double> > coords, std::vector<std::vector<double> > orients, std::vector<double> cell_);
     void set_coordinates(std::vector<Vec3> coords);
     void set_coordinates(std::vector<std::vector<double> > coords);
     std::vector<Vec3> get_coordinates();
+    std::vector<std::vector<double> > get_coordinates_as_list();
     std::vector<std::vector<double> > get_orientations_as_vector_of_angles();
     void set_orientations(std::vector<Rotation> orient);
     void set_orientations(std::vector<Vec3> orient);
     std::vector<Rotation> get_orientations();
+    Vec3 get_cell();
+    std::vector<double> get_cell_as_list();
+    std::vector<int> get_types();
 
     int get_N();
     void set_frame_num(int num);
@@ -55,6 +60,8 @@ public:
     bool does_i_j_interact(int i, int j, double = 1e-6);
 
     Vec3 get_i_j_displacement(int i, int j);
+
+    std::vector<double> get_i_j_displacement_as_vec(int i, int j);
 
     /*
     TODO:

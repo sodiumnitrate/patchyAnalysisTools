@@ -6,17 +6,20 @@
 namespace py = pybind11;
 
 // constructors
-Frame::Frame(std::vector<Vec3> coordinates_, std::vector<Rotation> orientations_){
+Frame::Frame(std::vector<Vec3> coordinates_, std::vector<Rotation> orientations_, Vec3 cell_){
     if (coordinates.size() != orientations.size()) throw "coordinates and orientations have different sizes.";
     coordinates = coordinates_;
     orientations = orientations_;
 
     N = coordinates.size();
+    types.resize(N);
     std::fill(types.begin(), types.end(), 0);
     frame_num = 0;
+
+    cell = cell_;
 }
 
-Frame::Frame(std::vector<std::vector<double> > coords, std::vector<std::vector<double> > orients){
+Frame::Frame(std::vector<std::vector<double> > coords, std::vector<std::vector<double> > orients, std::vector<double> cell_){
     if (coords.size() != orients.size()) throw "coordinates and orientations have different sizes.";
     N = coords.size();
     for( auto t : coords){
@@ -28,8 +31,11 @@ Frame::Frame(std::vector<std::vector<double> > coords, std::vector<std::vector<d
         orientations.push_back(rot);
     }
 
+    types.resize(N);
     std::fill(types.begin(), types.end(), 0);
     frame_num = 0;
+
+    cell.set_vec(cell_);
 }
 
 // accessing private props (do we even want these?)
@@ -140,6 +146,11 @@ Vec3 Frame::get_i_j_displacement(int i, int j){
     return disp;
 }
 
+std::vector<double> Frame::get_i_j_displacement_as_vec(int i, int j){
+    Vec3 disp = this->get_i_j_displacement(i, j);
+    return disp.get_vec();
+}
+
 std::vector<std::vector<int> > Frame::get_list_of_interacting_pairs(double tol){
     if(patches.get_n_patch() == 0) throw "no patches to calculate energy with.";
 
@@ -179,8 +190,30 @@ void Frame::set_cluster_info(){
 
 }
 
+std::vector<std::vector<double> > Frame::get_coordinates_as_list(){
+    std::vector<std::vector<double> > res;
+    for (auto t : coordinates){
+        res.push_back(t.get_vec());
+    }
+    return res;
+}
+
+Vec3 Frame::get_cell(){return cell;}
+std::vector<double> Frame::get_cell_as_list(){return cell.get_vec();}
+
+std::vector<int> Frame::get_types(){return types;}
+
 void init_frame(py::module_ &m){
     py::class_<Frame>(m, "Frame", py::dynamic_attr())
-        .def(py::init<std::vector<std::vector<double> >, std::vector<std::vector<double> > >())
+        .def(py::init<std::vector<std::vector<double> >, std::vector<std::vector<double> > , std::vector<double> >())
+        .def("get_N", &Frame::get_N)
+        .def("get_frame_num", &Frame::get_frame_num)
+        .def("set_frame_num", &Frame::set_frame_num)
+        .def_property("frame_num", &Frame::get_frame_num, &Frame::set_frame_num)
+        .def("get_coordinates", &Frame::get_coordinates_as_list)
+        .def("get_orientations", &Frame::get_orientations_as_vector_of_angles)
+        .def("write_xyz", &Frame::write_xyz)
+        .def("get_cell", &Frame::get_cell_as_list)
+        .def("get_displacement", &Frame::get_i_j_displacement_as_vec)
         ;
 }
