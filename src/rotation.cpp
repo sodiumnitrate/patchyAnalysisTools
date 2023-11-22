@@ -1,4 +1,4 @@
-#include "include/rotation.hpp"
+#include "rotation.hpp"
 
 // TODO: make quaternions default, avoid extra calculations
 

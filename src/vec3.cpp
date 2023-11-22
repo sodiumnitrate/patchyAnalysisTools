@@ -1,4 +1,4 @@
-#include "include/vec3.hpp"
+#include "vec3.hpp"
 
 
 // constructors

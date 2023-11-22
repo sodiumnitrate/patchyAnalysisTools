@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core>=0.3.3", "pybind11", "biopython", "numpy", "gsd", "matplotlib", "networkx"]
+requires = ["scikit-build-core>=0.3.3", "cmake", "pybind11", "biopython", "numpy", "gsd", "matplotlib", "networkx"]
 build-backend = "scikit_build_core.build"
 
 [project]

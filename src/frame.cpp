@@ -1,9 +1,5 @@
+#include "frame.hpp"
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include "include/frame.hpp"
-
-namespace py = pybind11;
 
 // constructors
 Frame::Frame(std::vector<Vec3> coordinates_, std::vector<Rotation> orientations_, Vec3 cell_){
@@ -202,18 +198,3 @@ Vec3 Frame::get_cell(){return cell;}
 std::vector<double> Frame::get_cell_as_list(){return cell.get_vec();}
 
 std::vector<int> Frame::get_types(){return types;}
-
-void init_frame(py::module_ &m){
-    py::class_<Frame>(m, "Frame", py::dynamic_attr())
-        .def(py::init<std::vector<std::vector<double> >, std::vector<std::vector<double> > , std::vector<double> >())
-        .def("get_N", &Frame::get_N)
-        .def("get_frame_num", &Frame::get_frame_num)
-        .def("set_frame_num", &Frame::set_frame_num)
-        .def_property("frame_num", &Frame::get_frame_num, &Frame::set_frame_num)
-        .def("get_coordinates", &Frame::get_coordinates_as_list)
-        .def("get_orientations", &Frame::get_orientations_as_vector_of_angles)
-        .def("write_xyz", &Frame::write_xyz)
-        .def("get_cell", &Frame::get_cell_as_list)
-        .def("get_displacement", &Frame::get_i_j_displacement_as_vec)
-        ;
-}

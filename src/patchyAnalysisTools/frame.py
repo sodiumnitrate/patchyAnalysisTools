@@ -1,7 +1,7 @@
 """
 This file holds the python bindings of the frame class.
 """
-from .patchyAnalysisTools_cpp import Frame as Frame_cpp
+from ._patchyAnalysisTools import Frame as Frame_cpp
 
 class Frame(Frame_cpp):
     """

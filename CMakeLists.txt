@@ -1,21 +1,84 @@
-cmake_minimum_required(VERSION 3.15...3.26)
+cmake_minimum_required(VERSION 3.15..3.26)
 
 set(CMAKE_CXX_STANDARD 20)
 
+
 project(
-    ${SKBUILD_PROJECT_NAME}
-    VERSION ${SKBUILD_PROJECT_VERSION}
+    patchyAnalysisTools
+    VERSION "2.0.0"
     LANGUAGES CXX)
 
-find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
-find_package(pybind11 CONFIG REQUIRED)
+include(GNUInstallDirs)
 
-file (GLOB SOURCE_FILES "src/*.cpp")
-file (GLOB HEADER_FILES "src/include/*.hpp")
+file (GLOB SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
-python_add_library(patchyAnalysisTools_cpp MODULE ${SOURCE_FILES} ${HEADER_FILES}  WITH_SOABI)
 
-target_link_libraries(patchyAnalysisTools_cpp PRIVATE pybind11::headers )
-target_compile_definitions(patchyAnalysisTools_cpp PRIVATE VERSION_INFO=${PROJECT_VERSION})
+# define the C++ library "patchyAnalysisTools"
+add_library(patchyAnalysisTools SHARED ${SOURCE_FILES})
 
-install(TARGETS patchyAnalysisTools_cpp DESTINATION patchyAnalysisTools)
+target_include_directories(
+    patchyAnalysisTools PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+                 $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+
+install(
+  TARGETS patchyAnalysisTools
+  EXPORT patchyAnalysisToolsTargets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+set(PATCHYANALYSISTOOLS_CMAKE_PACKAGE_INSTALL_SUBDIR "share/patchyAnalysisTools/cmake")
+
+install(
+  EXPORT patchyAnalysisToolsTargets
+  DESTINATION ${PATCHYANALYSISTOOLS_CMAKE_PACKAGE_INSTALL_SUBDIR})
+
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+  patchyAnalysisToolsConfigVersion.cmake
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMinorVersion)
+
+configure_package_config_file(
+  "${PROJECT_SOURCE_DIR}/cmake/patchyAnalysisToolsConfig.cmake.in" patchyAnalysisToolsConfig.cmake
+  INSTALL_DESTINATION ${PATCHYANALYSISTOOLS_CMAKE_PACKAGE_INSTALL_SUBDIR})
+
+install(FILES "${PROJECT_BINARY_DIR}/patchyAnalysisToolsConfig.cmake"
+              "${PROJECT_BINARY_DIR}/patchyAnalysisToolsConfigVersion.cmake"
+        DESTINATION ${PATCHYANALYSISTOOLS_CMAKE_PACKAGE_INSTALL_SUBDIR})
+
+# if called by scikit-build
+if(DEFINED SKBUILD)
+
+  # call pybind11-config to obtain the root of the cmake package
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pybind11 --cmakedir
+                  OUTPUT_VARIABLE pybind11_ROOT_RAW)
+  string(STRIP ${pybind11_ROOT_RAW} pybind11_ROOT)
+  find_package(pybind11)
+
+  pybind11_add_module(_patchyAnalysisTools MODULE
+                      "${PROJECT_SOURCE_DIR}/src/patchyAnalysisTools/patchyAnalysisTools_py.cpp")
+
+  target_link_libraries(_patchyAnalysisTools PRIVATE patchyAnalysisTools)
+
+  # Installing the extension module to the root of the package
+  install(TARGETS _patchyAnalysisTools DESTINATION .)
+
+  configure_file("${PROJECT_SOURCE_DIR}/src/patchyAnalysisTools/__main__.py.in"
+                 "${PROJECT_BINARY_DIR}/src/patchyAnalysisTools/__main__.py")
+
+  install(FILES "${PROJECT_BINARY_DIR}/src/patchyAnalysisTools/__main__.py" DESTINATION .)
+
+
+  if(APPLE)
+    set_target_properties(
+        _patchyAnalysisTools PROPERTIES INSTALL_RPATH "@loader_path/${CMAKE_INSTALL_LIBDIR}")
+  else()
+    set_target_properties(_patchyAnalysisTools PROPERTIES INSTALL_RPATH
+                                            "$ORIGIN/${CMAKE_INSTALL_LIBDIR}")
+  endif()
+
+endif()
