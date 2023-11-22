@@ -5,4 +5,5 @@
 ## TODO:
 1. GSD C API. Handling things on the python side for now.
 2. Proper error handling from the C++ side, visible to python as well. Using `throw`s for now.
-3. C++-level tests. Sticking to `pytest` for now.
+3. ~~C++-level tests. Sticking to `pytest` for now.~~
+4. Libraries for rotations.

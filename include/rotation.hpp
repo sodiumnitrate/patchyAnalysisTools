@@ -18,4 +18,6 @@ public:
     std::vector<double> get_quaternion();
 
     std::vector<double> rotate_vec(std::vector<double> vec);
+
+    std::vector<std::vector<double> > get_rotation_matrix();
 };

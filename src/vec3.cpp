@@ -58,7 +58,7 @@ void Vec3::rotate(double angles[3]){
 
 bool Vec3::is_normal(double tol){
     double norm_sq = x * x + y * y + z * z;
-    return std::abs(norm_sq - 1) >= tol;
+    return std::abs(norm_sq - 1) <= tol;
 }
 
 void Vec3::normalize(){
@@ -99,7 +99,7 @@ void Vec3::apply_pbc(Vec3 cell){
         while(vec[i] < -1*hbox) vec[i] += cellv[i];
     }
 
-    x = cellv[0];
-    y = cellv[1];
-    z = cellv[2];
+    x = vec[0];
+    y = vec[1];
+    z = vec[2];
 }
