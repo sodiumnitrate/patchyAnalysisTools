@@ -1,6 +1,7 @@
 name: C++ test
 
 on:
+  workflow_dispatch:
   push:
     branches: ["v2_wip"]
     paths:
