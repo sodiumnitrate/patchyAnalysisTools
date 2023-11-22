@@ -2,9 +2,11 @@ name: C++ test
 
 on:
   push:
-    branches: ["main", "v2_wip"]
+    branches: ["v2_wip"]
+    paths:
+      - ".github/workflows/cpp.yml"
   pull_request:
-    branches: ["main", "v2_wip"]
+    branches: ["v2_wip"]
 
 jobs:
   build:
