@@ -2,14 +2,14 @@ import argparse
 import sys
 from typing import List, Any
 from pathlib import Path
-import hello
+import patchyAnalysisTools
 
 
 def main(argv: List[Any]) -> int:
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cmakefiles", action='store_true', help="Print hello project CMake module directory. Useful for setting hello_ROOT in CMake.")
-    parser.add_argument("--prefix", action='store_true', help="Print hello package installation prefix. Useful for setting CMAKE_PREFIX_PATH in CMake.")
+    parser.add_argument("--cmakefiles", action='store_true', help="Print patchyAnalysisTools project CMake module directory. Useful for setting patchyAnalysisTools_ROOT in CMake.")
+    parser.add_argument("--prefix", action='store_true', help="Print patchyAnalysisTools package installation prefix. Useful for setting CMAKE_PREFIX_PATH in CMake.")
 
     args = parser.parse_args(args=argv[1:])
 
@@ -17,10 +17,10 @@ def main(argv: List[Any]) -> int:
         parser.print_help()
         return
 
-    prefix = Path(hello.__file__).parent
+    prefix = Path(patchyAnalysisTools.__file__).parent
 
     if args.cmakefiles:
-        print(prefix / "@HELLO_CMAKE_PACKAGE_INSTALL_SUBDIR@")
+        print(prefix / "@PATCHYANALYSISTOOLS_CMAKE_PACKAGE_INSTALL_SUBDIR@")
 
     if args.prefix:
         print(prefix)

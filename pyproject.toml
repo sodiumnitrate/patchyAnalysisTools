@@ -1,6 +1,6 @@
 [build-system]
-requires = ["scikit-build-core>=0.3.3", "cmake", "pybind11", "biopython", "numpy", "gsd", "matplotlib", "networkx"]
-build-backend = "scikit_build_core.build"
+requires = ["setuptools>=42", "scikit-build", "cmake", "pybind11", "biopython", "numpy", "gsd", "matplotlib", "networkx"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "patchyAnalysisTools"

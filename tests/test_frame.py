@@ -19,11 +19,15 @@ class TestFrame:
         assert f.frame_num == 10
 
     def test_get_coords_orients(self):
-        f = Frame([[1,1,1],[2,2,2]], [[0,0,0], [0,0,0]], [2, 2, 2])
+        coords_input = [[1,1,1], [2,2,2]]
+        orients_input = [[0,0,0],[0,0,0]]
+        f = Frame(coords_input, orients_input, [2, 2, 2])
         coords = f.get_coordinates()
         orients = f.get_orientations()
-        assert coords == [[1,1,1],[2,2,2]]
-        assert orients == [[0,0,0], [0,0,0]]
+        for j in range(2):
+            for i in range(3):
+                assert abs(coords[j][i] - coords_input[j][i]) < 1e-16
+                assert abs(orients[j][i] - orients_input[j][i]) < 1e-16
 
     def test_write_xyz(self):
         f = Frame([[1,1,1],[2,2,2]], [[0,0,0], [0,0,0]], [2, 2, 2])
