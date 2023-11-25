@@ -57,6 +57,29 @@ TEST(RotationTests, quaternion2){
     for(int i = 0; i < 4; i++){
         ASSERT_NEAR(quat[i], quat2[i], 0.00001);
     }
+
+}
+
+TEST(RotationTests, rotate_vec){
+    std::vector<double> vec;
+    vec.push_back(2);
+    vec.push_back(-3.2);
+    vec.push_back(1.05);
+
+    Rotation rot1(0, 0, 0, 1);
+
+    std::vector<double> res = rot1.rotate_vec(vec);
+    ASSERT_DOUBLE_EQ(res[0], vec[0]);
+    ASSERT_DOUBLE_EQ(res[1], vec[1]);
+    ASSERT_DOUBLE_EQ(res[2], vec[2]);
+
+    Rotation rot2(1, 0, 0, 1);
+    res = rot2.rotate_vec(vec);
+    ASSERT_DOUBLE_EQ(res[0], vec[0]);
+    ASSERT_DOUBLE_EQ(res[1], -1*vec[2]);
+    ASSERT_DOUBLE_EQ(res[2], vec[1]);
+
+    //TODO: implement more cases
 }
 
 int main(int argc, char** argv){

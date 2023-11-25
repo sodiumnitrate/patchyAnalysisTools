@@ -35,6 +35,6 @@ class TestFrame:
             f.write_xyz(f"{tmpdirname}/test.xyz")
 
     def test_particle_disp(self):
-        f = Frame([[0,0,0], [1,1,1],[2,2,2]], [[0,0,0], [0,0,0]], [2, 2, 2])
+        f = Frame([[0,0,0], [1,1,1],[2,2,2]], [[0,0,0], [0,0,0], [0,0,0]], [2, 2, 2])
         disp = f.get_displacement(0,2)
         assert disp == [0,0,0]

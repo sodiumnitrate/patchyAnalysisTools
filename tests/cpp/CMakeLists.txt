@@ -18,6 +18,10 @@ target_link_libraries(GTest::GTest INTERFACE gtest_main)
 set(TEST_LIST
     test_vec3
     test_rotation
+    test_patches
+    test_clusters
+    test_frame
+    test_trajectory
     )
 
 foreach (CUR_TEST ${TEST_LIST})

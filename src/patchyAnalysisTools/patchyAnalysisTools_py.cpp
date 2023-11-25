@@ -1,5 +1,6 @@
 #include "frame.hpp"
 #include "trajectory.hpp"
+#include "patches.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -24,6 +25,17 @@ void init_trajectory(py::module_ &m){
     py::class_<Trajectory>(m, "Trajectory", py::dynamic_attr())
         .def(py::init<std::vector<Frame>>())
         .def("get_frame", &Trajectory::get_frame)
+        ;
+}
+
+void init_patches(py::module_ &m){
+    py::class_<Patches>(m, "Patches", py::dynamic_attr())
+        .def(py::init<>())
+        .def("add_patch", py::overload_cast<double, double, double, std::vector<double>, int>(&Patches::add_patch))
+        .def("read_from_file", &Patches::read_from_file)
+        .def("make_ij_interact", &Patches::make_ij_interact)
+        .def("make_all_patches_adjacent", &Patches::make_all_patches_adjacent)
+        .def("are_ij_adjacent", &Patches::are_ij_adjacent)
         ;
 }
 

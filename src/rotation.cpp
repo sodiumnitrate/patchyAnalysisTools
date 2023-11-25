@@ -56,8 +56,10 @@ void Rotation::rotation_matrix_to_quaternion(){
             qw = S;
         }
     }
-    
+
+    // TODO: a better implementation, perhaps the one here: https://github.com/blender/blender/blob/756538b4a117cb51a15e848fa6170143b6aafcd8/source/blender/blenlib/intern/math_rotation.c#L272
     quaternion[3] = qw * 0.5 / std::sqrt(S);
+    if (quaternion[3] < 0) quaternion[3] *= -1;
     quaternion[0] = qx * 0.5 / std::sqrt(S);
     quaternion[1] = qy * 0.5 / std::sqrt(S);
     quaternion[2] = qz * 0.5 / std::sqrt(S);

@@ -73,6 +73,7 @@ void Patches::read_from_file(std::string file_name){
         throw "failed to open file";
     }
 
+
     std::getline(in_file, line);
     std::getline(in_file, line);
     std::istringstream ss(line);
@@ -81,11 +82,11 @@ void Patches::read_from_file(std::string file_name){
     if (std::stoi(pm) == 0) this->make_all_patches_adjacent();
     else this->turn_off_all_interactions();
 
+
     std::getline(in_file, line);
     std::getline(in_file, line);
     int ct = 0;
     while(std::getline(in_file, line)){
-        std::getline(in_file, line);
         std::getline(in_file, line);
         ss.str(line);
         ss.clear();
@@ -109,6 +110,7 @@ void Patches::read_from_file(std::string file_name){
         type = std::stoi(dummy);
         Vec3 vec(x,y,z);
         this->add_patch(eps, lambda, cos_delta, vec, type);
+        n_patch -= 1;
         std::getline(in_file, line);
         std::getline(in_file, line);
         ss.str(line);

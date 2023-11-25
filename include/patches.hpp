@@ -34,4 +34,9 @@ public:
 
     Vec3 get_vector(int i);
     double get_cos_delta(int i);
+
 };
+
+/*
+TODO: implement write to file
+*/
