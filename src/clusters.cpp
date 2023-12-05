@@ -35,19 +35,22 @@ Clusters::Clusters(std::vector<std::vector<int> > bond_list){
         }
     }
 
+
     std::unordered_set<int> visited;
     std::queue<int> Q;
+    std::vector<int> curr_cluster;
     int curr;
     for (auto part : parts){
-        std::vector<int> curr_cluster;
+        curr_cluster.clear();
         if (visited.find(part) != visited.end()) continue;
-        visited.insert(part);
-        curr_cluster.push_back(part);
+        
         Q.push(part);
         while(!Q.empty()){
             curr = Q.front();
             Q.pop();
             if (visited.find(curr) != visited.end()) continue;
+            visited.insert(curr);
+
             curr_cluster.push_back(curr);
             for (auto n : neighbors[curr]){
                 if(visited.find(n) == visited.end()){
@@ -55,7 +58,7 @@ Clusters::Clusters(std::vector<std::vector<int> > bond_list){
                 }
             }
         }
-        clusters.push_back(curr_cluster);
+        if (curr_cluster.size() != 0) clusters.push_back(curr_cluster);
     }
 }
 

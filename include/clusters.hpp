@@ -10,6 +10,7 @@ See LICENSE AND README.md in https://github.com/sodiumnitrate/patchyAnalysisTool
 #include <queue>
 #include <unordered_map>
 #include <unordered_set>
+#include <iostream>
 
 class Clusters{
     std::vector<std::vector<int> > clusters; // list of clusters
