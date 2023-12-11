@@ -7,6 +7,8 @@ See LICENSE AND README.md in https://github.com/sodiumnitrate/patchyAnalysisTool
 
 #include "clusters.hpp"
 
+// constructors
+Clusters::Clusters(){}
 Clusters::Clusters(std::vector<std::vector<int> > bond_list){
     bonds = bond_list;
 
@@ -65,3 +67,8 @@ Clusters::Clusters(std::vector<std::vector<int> > bond_list){
 // getters
 std::vector<std::vector<int> > Clusters::get_clusters(){ return clusters; }
 std::vector<std::vector<int> > Clusters::get_bond_list(){ return bonds; }
+
+// setters
+void Clusters::set_percolation_info(std::vector<bool> perc){
+    percolated = perc;
+}

@@ -141,6 +141,78 @@ TEST(FrameTests, test_bond_list){
     ASSERT_EQ(bond_list.size(), coords.size() * 3);
 }
 
+TEST(FrameTests, clusters){
+    std::vector<Eigen::Vector3d> coords;
+    std::vector<Rotation> orients;
+    Rotation rot(0,0,0);
+    double sep = 1.05;
+    for(int i = 0; i < 3; i++){
+        Eigen::Vector3d pos(i * sep, 0, 0);
+        coords.push_back(pos);
+        orients.push_back(rot);
+    }
+
+    Eigen::Vector3d cell(3 * sep, 3 * sep, 3 * sep);
+    Frame frame(coords, orients, cell);
+
+    // create the patch obj
+    Patches patches;
+    Eigen::Vector3d p0(1,0,0);
+    patches.add_patch(1, 1.1, 0.92, p0, 0);
+    Eigen::Vector3d p1(-1,0,0);
+    patches.add_patch(1, 1.1, 0.92, p1, 0);
+
+    
+    // determine bond_list
+    frame.determine_bond_list(patches);
+    frame.determine_clusters();
+
+    Clusters clust = frame.get_clusters();
+    std::vector<std::vector<int> > bond_list = frame.get_bond_list();
+    ASSERT_EQ(bond_list.size(), 3);
+    std::vector<std::vector<int> > clusters = clust.get_clusters();
+    ASSERT_EQ(clusters.size(), 1);
+    ASSERT_EQ(clusters[0].size(), 3);
+
+    ASSERT_TRUE(frame.is_percolated(clusters[0], patches));
+}
+
+TEST(FrameTests, perc_1){
+    std::vector<Eigen::Vector3d> coords;
+    std::vector<Rotation> orients;
+    Rotation rot(0,0,0);
+    double sep = 1.05;
+    for(int i = 0; i < 3; i++){
+        Eigen::Vector3d pos(i * sep, 0, 0);
+        coords.push_back(pos);
+        orients.push_back(rot);
+    }
+
+    Eigen::Vector3d cell(4 * sep, 3 * sep, 3 * sep);
+    Frame frame(coords, orients, cell);
+
+    // create the patch obj
+    Patches patches;
+    Eigen::Vector3d p0(1,0,0);
+    patches.add_patch(1, 1.1, 0.92, p0, 0);
+    Eigen::Vector3d p1(-1,0,0);
+    patches.add_patch(1, 1.1, 0.92, p1, 0);
+
+    
+    // determine bond_list
+    frame.determine_bond_list(patches);
+    frame.determine_clusters();
+
+    Clusters clust = frame.get_clusters();
+    std::vector<std::vector<int> > bond_list = frame.get_bond_list();
+    ASSERT_EQ(bond_list.size(), 2);
+    std::vector<std::vector<int> > clusters = clust.get_clusters();
+    ASSERT_EQ(clusters.size(), 1);
+    ASSERT_EQ(clusters[0].size(), 3);
+
+    ASSERT_FALSE(frame.is_percolated(clusters[0], patches));
+}
+
 int main(int argc, char** argv){
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

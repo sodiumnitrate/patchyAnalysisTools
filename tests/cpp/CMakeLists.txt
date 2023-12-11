@@ -20,6 +20,7 @@ set(TEST_LIST
     test_frame
     test_patches
     test_clusters
+    test_grid
     )
 
 foreach (CUR_TEST ${TEST_LIST})

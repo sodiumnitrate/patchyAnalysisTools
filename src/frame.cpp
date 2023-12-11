@@ -90,6 +90,7 @@ std::vector<double> Frame::get_cell_as_list(){
 }
 std::vector<int> Frame::get_types() { return types; }
 std::vector<std::vector<int> > Frame::get_bond_list(){ return bond_list; }
+Clusters Frame::get_clusters() { return clusters; }
 
 // setters
 void Frame::set_time_stamp(int fn) { time_stamp = fn; }
@@ -168,4 +169,102 @@ void Frame::determine_bond_list(Patches& p){
             }
         }
     }
+}
+
+void Frame::determine_clusters(){
+    Clusters cl(bond_list);
+    clusters = cl;
+}
+
+void Frame::determine_percolation(Patches& p){
+    std::vector<std::vector<int> > cluster_list = clusters.get_clusters();
+    std::vector<bool> perc_list;
+
+    for(auto cluster : cluster_list){
+        perc_list.push_back(this->is_percolated(cluster, p));
+    }
+}
+
+bool Frame::is_percolated(std::vector<int> parts, Patches& p){
+    // TODO: find a shorter way to do this
+    // (TODO: at the very least, move most to a separate function)
+    double grid_spacing = 0.1;
+    double gs_x, gs_y, gs_z;
+    int nx, ny, nz, sx, sy, sz, ixx, iyy, izz;
+    nx = (int) std::round(cell[0] / grid_spacing);
+    ny = (int) std::round(cell[1] / grid_spacing);
+    nz = (int) std::round(cell[2] / grid_spacing);
+
+    gs_x = cell[0] / nx;
+    gs_y = cell[1] / ny;
+    gs_z = cell[2] / nz;
+
+    Grid<int> grid(nx,ny,nz,0);
+    int rad_x = (int) std::round(p.get_max_lambda()*0.5/gs_x);
+    int rad_y = (int) std::round(p.get_max_lambda()*0.5/gs_y);
+    int rad_z = (int) std::round(p.get_max_lambda()*0.5/gs_z);
+    Grid<int> subgrid(rad_x * 2, rad_y * 2, rad_z * 2, 1);
+
+    for (auto part : parts){
+        sx = (int) std::round(coordinates[part](0) / gs_x);
+        sy = (int) std::round(coordinates[part](1) / gs_y);
+        sz = (int) std::round(coordinates[part](2) / gs_z);
+
+        grid.add_subgrid(subgrid, sx - rad_x, sy - rad_y, sz - rad_z);
+    }
+
+    std::vector<std::vector<int> > xy_plane = grid.sum(2);
+    std::vector<std::vector<int> > yz_plane = grid.sum(0);
+
+    // reduce dims
+    double binsize = 0.2;
+    int nxs = ((int) cell[0] / binsize) + 1;
+    int nys = ((int) cell[1] / binsize) + 1;
+    int nzs = ((int) cell[2] / binsize) + 1;
+
+    double binsize_x = cell[0] / nxs;
+    double binsize_y = cell[1] / nys;
+    double binsize_z = cell[2] / nzs;
+
+    Eigen::ArrayXd x_axis = Eigen::VectorXd::Zero(nxs);
+    Eigen::ArrayXd y_axis = Eigen::VectorXd::Zero(nys);
+    Eigen::ArrayXd z_axis = Eigen::VectorXd::Zero(nzs);
+    int sum, bin_idx;
+    for(int i = 0; i < nx; i++){
+        sum = 0;
+        for( int j = 0; j < ny; j++){
+            sum += xy_plane[i][j];
+        }
+        if (sum >= 1){
+            bin_idx = (int) i * gs_x / binsize_x;
+            x_axis(bin_idx) += 1;
+        }
+    }
+
+    for(int i = 0; i < ny; i++){
+        sum = 0;
+        for(int j = 0; j < nx; j++){
+            sum += xy_plane[i][j];
+        }
+        if (sum >= 1){
+            bin_idx = (int) i * gs_y / binsize_y;
+            y_axis(bin_idx) += 1;
+        }
+    }
+
+    for(int i = 0; i < nz; i++){
+        sum = 0;
+        for(int j = 0; j < ny; j++){
+            sum += yz_plane[i][j];
+        }
+        if( sum >= 1){
+            bin_idx = (int) i * gs_z / binsize_z;
+            z_axis(bin_idx) += 1;
+        }
+    }
+
+    // percolated if all values >= 1 in along at least one dimension
+    if ( (x_axis >= 1).all() or (y_axis >= 1).all() or (z_axis >= 1).all()) return true;
+
+    return false;
 }
