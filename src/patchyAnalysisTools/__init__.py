@@ -11,5 +11,6 @@ from __future__ import annotations
 
 from .frame import Frame
 from .patches import Patches
+from .clusters import Clusters
 
-__all__ = ["Frame", "Patches"]
+__all__ = ["Frame", "Patches", "Clusters"]

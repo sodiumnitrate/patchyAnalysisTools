@@ -183,6 +183,8 @@ void Frame::determine_percolation(Patches& p){
     for(auto cluster : cluster_list){
         perc_list.push_back(this->is_percolated(cluster, p));
     }
+
+    clusters.set_percolation_info(perc_list);
 }
 
 bool Frame::is_percolated(std::vector<int> parts, Patches& p){

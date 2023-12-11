@@ -26,6 +26,9 @@ void init_frame(py::module_ &m){
         .def("write_xyz", &Frame::write_xyz)
         .def("does_ij_interact", &Frame::does_ij_interact)
         .def("determine_bond_list", &Frame::determine_bond_list)
+        .def("determine_clusters", &Frame::determine_clusters)
+        .def("determine_percolation", &Frame::determine_percolation)
+        .def("get_clusters", &Frame::get_clusters)
         ;
 }
 
@@ -40,7 +43,16 @@ void init_patches(py::module_ &m){
         ;
 }
 
+void init_clusters(py::module_ &m){
+    py::class_<Clusters>(m, "Clusters")
+        .def(py::init<>())
+        .def("get_clusters", &Clusters::get_clusters)
+        .def("get_bond_list", &Clusters::get_bond_list)
+        ;
+}
+
 PYBIND11_MODULE(_patchyAnalysisTools, m){
     init_frame(m);
     init_patches(m);
+    init_clusters(m);
 }
