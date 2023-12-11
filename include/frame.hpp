@@ -50,6 +50,7 @@ public:
 
     // write to file
     void write_xyz(std::string file_name);
+    void write_xyz_file_handle(std::ofstream& out_file);
 
     // interactions
     Eigen::Vector3d get_ij_displacement(int i, int j);
