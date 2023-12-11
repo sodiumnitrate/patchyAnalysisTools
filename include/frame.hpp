@@ -58,4 +58,5 @@ public:
     void determine_clusters();
     void determine_percolation(Patches& p);
     bool is_percolated(std::vector<int> parts, Patches& p);
+    bool is_percolated();
 };

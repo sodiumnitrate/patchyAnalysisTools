@@ -24,6 +24,7 @@ public:
     // getters
     std::vector<std::vector<int> > get_clusters();
     std::vector<std::vector<int> > get_bond_list();
+    std::vector<bool> get_perc_list();
 
     // setters
     void set_percolation_info(std::vector<bool> perc);

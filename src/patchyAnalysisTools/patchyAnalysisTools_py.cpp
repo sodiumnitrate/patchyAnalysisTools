@@ -29,6 +29,7 @@ void init_frame(py::module_ &m){
         .def("determine_clusters", &Frame::determine_clusters)
         .def("determine_percolation", &Frame::determine_percolation)
         .def("get_clusters", &Frame::get_clusters)
+        .def("is_percolated", py::overload_cast<>(&Frame::is_percolated))
         ;
 }
 

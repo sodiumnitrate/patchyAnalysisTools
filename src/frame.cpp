@@ -270,3 +270,11 @@ bool Frame::is_percolated(std::vector<int> parts, Patches& p){
 
     return false;
 }
+
+bool Frame::is_percolated(){
+    std::vector<bool> perc = clusters.get_perc_list();
+    for(auto t : perc){
+        if (t) return true;
+    }
+    return false;
+}
