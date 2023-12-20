@@ -100,11 +100,15 @@ void Frame::set_types(std::vector<int> ty) { types = ty; }
 void Frame::write_xyz(std::string file_name){
     std::ofstream out_file;
     out_file.open(file_name);
+    this->write_xyz_file_handle(out_file);
+    out_file.close();
+}
+void Frame::write_xyz_file_handle(std::ofstream& out_file){
     out_file << N << std::endl;
     out_file << "time = " << time_stamp;
     out_file << ", Lx= " << cell(0);
     out_file << ", Ly= " << cell(1);
-    out_file << ", L!= " << cell(2) << std::endl;
+    out_file << ", Lz= " << cell(2) << std::endl;
 
     for (int i = 0; i < N; i++){
         // TODO: switch to unordered_map
@@ -116,7 +120,6 @@ void Frame::write_xyz(std::string file_name){
 
         out_file << coordinates[i](0) << " " << coordinates[i](1) << " " << coordinates[i](2) << std::endl;
     }
-    out_file.close();
 }
 
 // interactions
