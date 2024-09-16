@@ -6,3 +6,6 @@ eggs/
 build/
 dist/
 */__pycache__/
+_skbuild
+.pytest_cache
+*/*.egg-info
